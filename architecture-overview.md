@@ -14,57 +14,54 @@ Pebble is a lightweight, open-source Java EE blogging platform that follows a **
 
 Pebble follows a traditional **layered monolithic architecture** with clear separation of concerns:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      PRESENTATION LAYER                      │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │   JSP    │  │  Filters │  │ Servlets │  │   Views  │   │
-│  │  Pages   │  │          │  │          │  │          │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     WEB CONTROLLER LAYER                     │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │  Action  │  │  Action  │  │ XML-RPC  │  │   DWR    │   │
-│  │ Factory  │  │Controller│  │Controller│  │ (AJAX)   │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      BUSINESS LAYER                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │   Services   │  │    Event     │  │  Decorator   │      │
-│  │              │  │  Dispatchers │  │    Chain     │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-└─────────────────────────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                       DOMAIN LAYER                           │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │   Blog   │  │BlogEntry │  │ Comment  │  │TrackBack │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ Category │  │   Tag    │  │  Static  │  │   User   │   │
-│  │          │  │          │  │   Page   │  │          │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    DATA ACCESS LAYER                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │   DAO        │  │   DAO        │  │   DAO        │      │
-│  │   Factory    │  │  Interfaces  │  │Implementations│      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-└─────────────────────────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    PERSISTENCE LAYER                         │
-│                  ┌───────────────────┐                       │
-│                  │  FILE SYSTEM      │                       │
-│                  │  (XML/Properties) │                       │
-│                  └───────────────────┘                       │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph PresentationLayer["PRESENTATION LAYER"]
+        JSP["JSP Pages"]
+        Filters["Filters"]
+        Servlets["Servlets"]
+        Views["Views"]
+    end
+
+    subgraph WebControllerLayer["WEB CONTROLLER LAYER"]
+        ActionFactory["Action Factory"]
+        ActionController["Action Controller"]
+        XMLRPCController["XML-RPC Controller"]
+        DWR["DWR (AJAX)"]
+    end
+
+    subgraph BusinessLayer["BUSINESS LAYER"]
+        Services["Services"]
+        EventDispatchers["Event Dispatchers"]
+        DecoratorChain["Decorator Chain"]
+    end
+
+    subgraph DomainLayer["DOMAIN LAYER"]
+        Blog["Blog"]
+        BlogEntry["BlogEntry"]
+        Comment["Comment"]
+        TrackBack["TrackBack"]
+        Category["Category"]
+        Tag["Tag"]
+        StaticPage["Static Page"]
+        User["User"]
+    end
+
+    subgraph DataAccessLayer["DATA ACCESS LAYER"]
+        DAOFactory["DAO Factory"]
+        DAOInterfaces["DAO Interfaces"]
+        DAOImplementations["DAO Implementations"]
+    end
+
+    subgraph PersistenceLayer["PERSISTENCE LAYER"]
+        FileSystem["FILE SYSTEM<br/>(XML/Properties)"]
+    end
+
+    PresentationLayer --> WebControllerLayer
+    WebControllerLayer --> BusinessLayer
+    BusinessLayer --> DomainLayer
+    DomainLayer --> DataAccessLayer
+    DataAccessLayer --> PersistenceLayer
 ```
 
 ### 1.2 Supporting Patterns
@@ -83,88 +80,46 @@ Pebble follows a traditional **layered monolithic architecture** with clear sepa
 
 ### 2.1 High-Level Component Diagram
 
-```
-┌───────────────────────────────────────────────────────────────────┐
-│                         WEB BROWSER                               │
-│                      (End User Client)                            │
-└───────────────────────────────────────────────────────────────────┘
-                            │
-                            │ HTTP/HTTPS
-                            ▼
-┌───────────────────────────────────────────────────────────────────┐
-│                      APACHE TOMCAT 7.0                            │
-│                   (Servlet 3.0 Container)                         │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │                  PEBBLE WEB APPLICATION                      │ │
-│  │                                                              │ │
-│  │  ┌────────────────────┐  ┌────────────────────┐            │ │
-│  │  │  Security Filters  │  │  Processing        │            │ │
-│  │  │  - Spring Security │  │  Filters           │            │ │
-│  │  │  - Authentication  │  │  - GZIP            │            │ │
-│  │  │  - Authorization   │  │  - Transformation  │            │ │
-│  │  └────────────────────┘  └────────────────────┘            │ │
-│  │                                                              │ │
-│  │  ┌────────────────────────────────────────────────────────┐ │ │
-│  │  │              SPRING FRAMEWORK                          │ │ │
-│  │  │  ┌──────────────────────────────────────────────────┐ │ │ │
-│  │  │  │          Application Context                     │ │ │ │
-│  │  │  │  - Bean Management (IoC)                         │ │ │ │
-│  │  │  │  - Dependency Injection                          │ │ │ │
-│  │  │  │  - Component Scanning                            │ │ │ │
-│  │  │  └──────────────────────────────────────────────────┘ │ │ │
-│  │  └────────────────────────────────────────────────────────┘ │ │
-│  │                                                              │ │
-│  │  ┌─────────────────────────────────────────────────────────┐│ │
-│  │  │                  CORE COMPONENTS                        ││ │
-│  │  │                                                         ││ │
-│  │  │  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐ ││ │
-│  │  │  │   Blog       │  │   Event      │  │  Content    │ ││ │
-│  │  │  │   Manager    │  │   Dispatcher │  │  Decorator  │ ││ │
-│  │  │  └──────────────┘  └──────────────┘  └─────────────┘ ││ │
-│  │  │  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐ ││ │
-│  │  │  │   Search     │  │   Cache      │  │  Security   │ ││ │
-│  │  │  │   Index      │  │   Manager    │  │  Realm      │ ││ │
-│  │  │  │   (Lucene)   │  │   (EhCache)  │  │             │ ││ │
-│  │  │  └──────────────┘  └──────────────┘  └─────────────┘ ││ │
-│  │  └─────────────────────────────────────────────────────────┘│ │
-│  └──────────────────────────────────────────────────────────────┘ │
-└───────────────────────────────────────────────────────────────────┘
-                            │
-                            │ File I/O
-                            ▼
-┌───────────────────────────────────────────────────────────────────┐
-│                      FILE SYSTEM STORAGE                          │
-│                                                                   │
-│  ${dataDirectory}/                                                │
-│    ├── blogs/                                                     │
-│    │   ├── blog1/                                                 │
-│    │   │   ├── blog.properties                                   │
-│    │   │   ├── categories.xml                                    │
-│    │   │   ├── referer-filters.xml                               │
-│    │   │   ├── blog-entries/                                     │
-│    │   │   │   ├── 2023/11/07/1699344000000.xml                  │
-│    │   │   ├── indexes/  (Lucene search indexes)                 │
-│    │   │   ├── files/    (uploaded images, attachments)          │
-│    │   │   └── pages/    (static pages)                          │
-│    │   └── blog2/                                                 │
-│    └── realm/  (user credentials if file-based)                  │
-└───────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    Browser["WEB BROWSER<br/>(End User Client)"]
 
+    subgraph Tomcat["APACHE TOMCAT 7.0<br/>(Servlet 3.0 Container)"]
+        subgraph PebbleApp["PEBBLE WEB APPLICATION"]
+            SecurityFilters["Security Filters<br/>- Spring Security<br/>- Authentication<br/>- Authorization"]
+            ProcessingFilters["Processing Filters<br/>- GZIP<br/>- Transformation"]
 
-┌───────────────────────────────────────────────────────────────────┐
-│                      EXTERNAL INTEGRATIONS                        │
-│                                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
-│  │   SMTP       │  │   Twitter    │  │   OpenID     │           │
-│  │   Server     │  │   API        │  │   Provider   │           │
-│  │ (Outbound)   │  │ (Twitter4j)  │  │              │           │
-│  └──────────────┘  └──────────────┘  └──────────────┘           │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
-│  │   XML-RPC    │  │   Atom/RSS   │  │   Trackback  │           │
-│  │   Clients    │  │   Readers    │  │   Senders    │           │
-│  │ (MetaWeblog) │  │              │  │              │           │
-│  └──────────────┘  └──────────────┘  └──────────────┘           │
-└───────────────────────────────────────────────────────────────────┘
+            subgraph SpringFramework["SPRING FRAMEWORK"]
+                AppContext["Application Context<br/>- Bean Management (IoC)<br/>- Dependency Injection<br/>- Component Scanning"]
+            end
+
+            subgraph CoreComponents["CORE COMPONENTS"]
+                BlogManager["Blog Manager"]
+                EventDispatcher["Event Dispatcher"]
+                ContentDecorator["Content Decorator"]
+                SearchIndex["Search Index<br/>(Lucene)"]
+                CacheManager["Cache Manager<br/>(EhCache)"]
+                SecurityRealm["Security Realm"]
+            end
+        end
+    end
+
+    subgraph FileSystemStorage["FILE SYSTEM STORAGE"]
+        DataDir["${dataDirectory}/<br/>├── blogs/<br/>│   ├── blog1/<br/>│   │   ├── blog.properties<br/>│   │   ├── categories.xml<br/>│   │   ├── blog-entries/<br/>│   │   ├── indexes/<br/>│   │   ├── files/<br/>│   │   └── pages/<br/>│   └── blog2/<br/>└── realm/"]
+    end
+
+    subgraph ExternalIntegrations["EXTERNAL INTEGRATIONS"]
+        SMTP["SMTP Server<br/>(Outbound)"]
+        Twitter["Twitter API<br/>(Twitter4j)"]
+        OpenID["OpenID Provider"]
+        XMLRPC["XML-RPC Clients<br/>(MetaWeblog)"]
+        AtomRSS["Atom/RSS Readers"]
+        TrackBack["Trackback Senders"]
+    end
+
+    Browser -->|HTTP/HTTPS| Tomcat
+    PebbleApp -->|File I/O| FileSystemStorage
+    PebbleApp -.->|External Calls| ExternalIntegrations
 ```
 
 ### 2.2 Core Components
@@ -228,72 +183,59 @@ Pebble follows a traditional **layered monolithic architecture** with clear sepa
 
 ### 3.1 Technology Stack Layers
 
-```
-┌───────────────────────────────────────────────────────────────┐
-│                    CLIENT LAYER                               │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
-│  │  HTML/CSS  │  │ JavaScript │  │ FCKeditor  │             │
-│  │            │  │            │  │  (WYSIWYG) │             │
-│  └────────────┘  └────────────┘  └────────────┘             │
-└───────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────────────────────────────────────────┐
-│                 PRESENTATION LAYER                            │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
-│  │    JSP     │  │    JSTL    │  │   Custom   │             │
-│  │    2.2     │  │            │  │  Tag Libs  │             │
-│  └────────────┘  └────────────┘  └────────────┘             │
-└───────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────────────────────────────────────────┐
-│                   WEB FRAMEWORK LAYER                         │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
-│  │  Servlet   │  │   Spring   │  │   Spring   │             │
-│  │    3.0     │  │    3.0.7   │  │  Security  │             │
-│  │            │  │            │  │   3.0.8    │             │
-│  └────────────┘  └────────────┘  └────────────┘             │
-└───────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────────────────────────────────────────┐
-│                   APPLICATION LAYER                           │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
-│  │   Pebble   │  │    DWR     │  │   ROME     │             │
-│  │   Domain   │  │   2.0-rc2  │  │   1.5.1    │             │
-│  │   Models   │  │            │  │ (RSS/Atom) │             │
-│  └────────────┘  └────────────┘  └────────────┘             │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
-│  │  XML-RPC   │  │ Twitter4j  │  │  JCaptcha  │             │
-│  │    1.2     │  │   2.0.10   │  │  /ReCaptcha│             │
-│  └────────────┘  └────────────┘  └────────────┘             │
-└───────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────────────────────────────────────────┐
-│                  INFRASTRUCTURE LAYER                         │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
-│  │   Lucene   │  │  EhCache   │  │   JAXB     │             │
-│  │   1.4.1    │  │   2.10.5   │  │    2.0     │             │
-│  │  (Search)  │  │  (Cache)   │  │   (XML)    │             │
-│  └────────────┘  └────────────┘  └────────────┘             │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
-│  │ Commons    │  │  JavaMail  │  │   iText    │             │
-│  │ Libraries  │  │    1.4     │  │   2.0.8    │             │
-│  │            │  │            │  │   (PDF)    │             │
-│  └────────────┘  └────────────┘  └────────────┘             │
-└───────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────────────────────────────────────────┐
-│                    RUNTIME LAYER                              │
-│  ┌────────────┐  ┌────────────┐                              │
-│  │   Java     │  │   Apache   │                              │
-│  │    6.0     │  │  Tomcat    │                              │
-│  │    JVM     │  │    7.0.x   │                              │
-│  └────────────┘  └────────────┘                              │
-└───────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────────────────────────────────────────┐
-│                 OPERATING SYSTEM LAYER                        │
-│              Linux / Windows / macOS                          │
-└───────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph ClientLayer["CLIENT LAYER"]
+        HTMLCSS["HTML/CSS"]
+        JavaScript["JavaScript"]
+        FCKeditor["FCKeditor<br/>(WYSIWYG)"]
+    end
+
+    subgraph PresentationLayer["PRESENTATION LAYER"]
+        JSP["JSP 2.2"]
+        JSTL["JSTL"]
+        CustomTagLibs["Custom Tag Libs"]
+    end
+
+    subgraph WebFrameworkLayer["WEB FRAMEWORK LAYER"]
+        Servlet["Servlet 3.0"]
+        Spring["Spring 3.0.7"]
+        SpringSecurity["Spring Security 3.0.8"]
+    end
+
+    subgraph ApplicationLayer["APPLICATION LAYER"]
+        PebbleDomain["Pebble Domain Models"]
+        DWR["DWR 2.0-rc2"]
+        ROME["ROME 1.5.1<br/>(RSS/Atom)"]
+        XMLRPC["XML-RPC 1.2"]
+        Twitter4j["Twitter4j 2.0.10"]
+        JCaptcha["JCaptcha/ReCaptcha"]
+    end
+
+    subgraph InfrastructureLayer["INFRASTRUCTURE LAYER"]
+        Lucene["Lucene 1.4.1<br/>(Search)"]
+        EhCache["EhCache 2.10.5<br/>(Cache)"]
+        JAXB["JAXB 2.0<br/>(XML)"]
+        Commons["Commons Libraries"]
+        JavaMail["JavaMail 1.4"]
+        iText["iText 2.0.8<br/>(PDF)"]
+    end
+
+    subgraph RuntimeLayer["RUNTIME LAYER"]
+        Java["Java 6.0 JVM"]
+        Tomcat["Apache Tomcat 7.0.x"]
+    end
+
+    subgraph OSLayer["OPERATING SYSTEM LAYER"]
+        OS["Linux / Windows / macOS"]
+    end
+
+    ClientLayer --> PresentationLayer
+    PresentationLayer --> WebFrameworkLayer
+    WebFrameworkLayer --> ApplicationLayer
+    ApplicationLayer --> InfrastructureLayer
+    InfrastructureLayer --> RuntimeLayer
+    RuntimeLayer --> OSLayer
 ```
 
 ### 3.2 Key Dependencies
@@ -348,59 +290,24 @@ Pebble follows a traditional **layered monolithic architecture** with clear sepa
 
 ### 4.1 Standard Deployment Model
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      PRODUCTION SERVER                          │
-│                                                                 │
-│  ┌───────────────────────────────────────────────────────────┐ │
-│  │               REVERSE PROXY (Optional)                    │ │
-│  │                 Apache HTTP Server                        │ │
-│  │                   or Nginx                                │ │
-│  │                                                           │ │
-│  │  - SSL/TLS Termination                                   │ │
-│  │  - Static content serving                                │ │
-│  │  - Load balancing (limited)                              │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│                            │                                    │
-│                            │ HTTP/AJP                           │
-│                            ▼                                    │
-│  ┌───────────────────────────────────────────────────────────┐ │
-│  │              APACHE TOMCAT 7.0.x                          │ │
-│  │                                                           │ │
-│  │  ┌─────────────────────────────────────────────────────┐ │ │
-│  │  │  CATALINA_HOME/webapps/                             │ │ │
-│  │  │    └── pebble.war (or extracted pebble/)            │ │ │
-│  │  │                                                      │ │ │
-│  │  │  JVM Configuration:                                  │ │ │
-│  │  │    - -Xmx512m (min heap)                            │ │ │
-│  │  │    - -XX:MaxPermSize=256m                           │ │ │
-│  │  └─────────────────────────────────────────────────────┘ │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│                            │                                    │
-│                            │ File I/O                           │
-│                            ▼                                    │
-│  ┌───────────────────────────────────────────────────────────┐ │
-│  │            FILE SYSTEM DATA DIRECTORY                     │ │
-│  │                                                           │ │
-│  │  ${user.home}/pebble/    (default)                       │ │
-│  │  or configurable path via pebble.properties              │ │
-│  │                                                           │ │
-│  │  ├── blogs/                                              │ │
-│  │  │   ├── default/          (single blog mode)           │ │
-│  │  │   │   ├── blog.properties                            │ │
-│  │  │   │   ├── categories.xml                             │ │
-│  │  │   │   ├── blog-entries/                              │ │
-│  │  │   │   │   └── YYYY/MM/DD/*.xml                       │ │
-│  │  │   │   ├── indexes/      (Lucene)                     │ │
-│  │  │   │   ├── files/        (uploads)                    │ │
-│  │  │   │   └── pages/        (static pages)               │ │
-│  │  │   └── [blog-id]/        (multi-blog mode)            │ │
-│  │  └── realm/                (file-based security)        │ │
-│  │                                                           │ │
-│  │  Recommended: Regular backup of this directory!          │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph ProductionServer["PRODUCTION SERVER"]
+        subgraph ReverseProxy["REVERSE PROXY (Optional)<br/>Apache HTTP Server or Nginx"]
+            ProxyFeatures["- SSL/TLS Termination<br/>- Static content serving<br/>- Load balancing (limited)"]
+        end
+
+        subgraph ApacheTomcat["APACHE TOMCAT 7.0.x"]
+            WebApp["CATALINA_HOME/webapps/<br/>└── pebble.war<br/><br/>JVM Configuration:<br/>- -Xmx512m (min heap)<br/>- -XX:MaxPermSize=256m"]
+        end
+
+        subgraph FileSystemDataDir["FILE SYSTEM DATA DIRECTORY"]
+            DataDirectory["${user.home}/pebble/ (default)<br/><br/>├── blogs/<br/>│   ├── default/ (single blog)<br/>│   │   ├── blog.properties<br/>│   │   ├── categories.xml<br/>│   │   ├── blog-entries/<br/>│   │   │   └── YYYY/MM/DD/*.xml<br/>│   │   ├── indexes/ (Lucene)<br/>│   │   ├── files/ (uploads)<br/>│   │   └── pages/ (static)<br/>│   └── [blog-id]/ (multi-blog)<br/>└── realm/ (file-based security)<br/><br/>⚠️ Backup this directory regularly!"]
+        end
+
+        ReverseProxy -->|HTTP/AJP| ApacheTomcat
+        ApacheTomcat -->|File I/O| FileSystemDataDir
+    end
 ```
 
 ### 4.2 Configuration Files
@@ -463,14 +370,12 @@ Pebble follows a traditional **layered monolithic architecture** with clear sepa
 
 #### Scalability Rating
 
-```
-┌────────────────────────────────────────────────────────┐
-│ Vertical Scalability:   ████████░░ (8/10)              │
-│ Horizontal Scalability: ██░░░░░░░░ (2/10)              │
-│ Multi-Tenancy:          ████████░░ (8/10)              │
-│ Geographic Distribution: █░░░░░░░░░ (1/10)             │
-└────────────────────────────────────────────────────────┘
-```
+| Metric | Rating | Score |
+|--------|--------|-------|
+| **Vertical Scalability** | ⬛⬛⬛⬛⬛⬛⬛⬛⬜⬜ | 8/10 |
+| **Horizontal Scalability** | ⬛⬛⬜⬜⬜⬜⬜⬜⬜⬜ | 2/10 |
+| **Multi-Tenancy** | ⬛⬛⬛⬛⬛⬛⬛⬛⬜⬜ | 8/10 |
+| **Geographic Distribution** | ⬛⬜⬜⬜⬜⬜⬜⬜⬜⬜ | 1/10 |
 
 **Recommendation:** Pebble is designed for single-server, small-to-medium traffic blogs. For high-traffic or mission-critical applications, consider database-backed alternatives.
 
@@ -517,57 +422,43 @@ Pebble follows a traditional **layered monolithic architecture** with clear sepa
 
 ### 5.3 Performance Tuning Recommendations
 
+#### 1. JVM Tuning
+```bash
+-Xms512m -Xmx1024m
+-XX:MaxPermSize=256m
+-XX:+UseConcMarkSweepGC
+-XX:+CMSParallelRemarkEnabled
 ```
-┌─────────────────────────────────────────────────────────────┐
-│               PERFORMANCE OPTIMIZATION                      │
-└─────────────────────────────────────────────────────────────┘
 
-1. JVM Tuning
-   ┌────────────────────────────────────────────────┐
-   │ -Xms512m -Xmx1024m                             │
-   │ -XX:MaxPermSize=256m                           │
-   │ -XX:+UseConcMarkSweepGC                        │
-   │ -XX:+CMSParallelRemarkEnabled                  │
-   └────────────────────────────────────────────────┘
+#### 2. EhCache Configuration
+- Increase cache sizes for popular content
+- Configure disk overflow for large caches
+- Set appropriate TTL values
 
-2. EhCache Configuration
-   ┌────────────────────────────────────────────────┐
-   │ - Increase cache sizes for popular content    │
-   │ - Configure disk overflow for large caches    │
-   │ - Set appropriate TTL values                  │
-   └────────────────────────────────────────────────┘
+#### 3. Lucene Optimization
+- Schedule index rebuilds during off-hours
+- Use RAM directory for small indexes
+- Optimize index periodically
 
-3. Lucene Optimization
-   ┌────────────────────────────────────────────────┐
-   │ - Schedule index rebuilds during off-hours    │
-   │ - Use RAM directory for small indexes         │
-   │ - Optimize index periodically                 │
-   └────────────────────────────────────────────────┘
-
-4. Tomcat Configuration
-   ┌────────────────────────────────────────────────┐
-   │ <Connector maxThreads="200"                    │
-   │            minSpareThreads="25"                │
-   │            connectionTimeout="20000"           │
-   │            compression="on"                    │
-   │            compressableMimeType="text/html,... │
-   └────────────────────────────────────────────────┘
-
-5. Reverse Proxy (Apache/Nginx)
-   ┌────────────────────────────────────────────────┐
-   │ - Serve static content directly                │
-   │ - Enable browser caching                       │
-   │ - SSL offloading                               │
-   │ - Rate limiting                                │
-   └────────────────────────────────────────────────┘
-
-6. Data Directory
-   ┌────────────────────────────────────────────────┐
-   │ - Use SSD for index directory                  │
-   │ - Separate disk for blog-entries (reduce I/O) │
-   │ - Regular cleanup of old logs                  │
-   └────────────────────────────────────────────────┘
+#### 4. Tomcat Configuration
+```xml
+<Connector maxThreads="200"
+           minSpareThreads="25"
+           connectionTimeout="20000"
+           compression="on"
+           compressableMimeType="text/html,text/css,text/javascript,application/json" />
 ```
+
+#### 5. Reverse Proxy (Apache/Nginx)
+- Serve static content directly
+- Enable browser caching
+- SSL offloading
+- Rate limiting
+
+#### 6. Data Directory
+- Use SSD for index directory
+- Separate disk for blog-entries (reduce I/O)
+- Regular cleanup of old logs
 
 ### 5.4 Capacity Planning
 
@@ -591,56 +482,64 @@ Pebble follows a traditional **layered monolithic architecture** with clear sepa
 
 ### 6.1 Security Layers
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   SECURITY ARCHITECTURE                     │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Layer1["Layer 1: Network Security"]
+        HTTPS["HTTPS/TLS (configurable)"]
+        IPControl["IP-based access control"]
+        RateLimit["Rate limiting (reverse proxy)"]
+    end
 
-Layer 1: Network Security
-  ├── HTTPS/TLS (configurable)
-  ├── IP-based access control (server level)
-  └── Rate limiting (reverse proxy)
+    subgraph Layer2["Layer 2: Application Filters"]
+        ResponseSplitting["ResponseSplittingPreventer"]
+        SpringSecFilter["Spring Security FilterChain"]
+        Authentication["Authentication"]
+        Authorization["Authorization"]
+        CSRF["CSRF Protection"]
+        XSSPrevention["XSS Prevention"]
+    end
 
-Layer 2: Application Filters
-  ├── ResponseSplittingPreventer (HTTP response injection)
-  ├── Spring Security FilterChain
-  │   ├── Authentication
-  │   ├── Authorization
-  │   └── CSRF Protection
-  └── XSS Prevention (content escaping)
+    subgraph Layer3["Layer 3: Authentication"]
+        FormLogin["Form-based login"]
+        OpenID["OpenID support"]
+        BasicAuth["HTTP Basic Auth (XML-RPC)"]
+        FileRealm["File-based realm"]
+        LDAPRealm["LDAP realm (pluggable)"]
+        DBRealm["Database realm (pluggable)"]
+    end
 
-Layer 3: Authentication
-  ├── Form-based login
-  ├── OpenID support
-  ├── HTTP Basic Auth (XML-RPC APIs)
-  └── Security Realm
-      ├── File-based realm (default)
-      ├── LDAP realm (pluggable)
-      └── Database realm (pluggable)
+    subgraph Layer4["Layer 4: Authorization"]
+        RBAC["Role-based access control"]
+        RoleOwner["ROLE_BLOG_OWNER"]
+        RolePublisher["ROLE_BLOG_PUBLISHER"]
+        RoleContrib["ROLE_BLOG_CONTRIBUTOR"]
+        RoleAdmin["ROLE_BLOG_ADMIN"]
+        RoleReader["ROLE_BLOG_READER"]
+        URLSecurity["URL-based security rules"]
+    end
 
-Layer 4: Authorization
-  ├── Role-based access control (RBAC)
-  │   ├── ROLE_BLOG_OWNER
-  │   ├── ROLE_BLOG_PUBLISHER
-  │   ├── ROLE_BLOG_CONTRIBUTOR
-  │   ├── ROLE_BLOG_ADMIN
-  │   └── ROLE_BLOG_READER
-  └── URL-based security rules
+    subgraph Layer5["Layer 5: Content Security"]
+        CommentApproval["Comment approval workflow"]
+        CAPTCHA["CAPTCHA (JCaptcha/ReCaptcha)"]
+        SpamFiltering["Spam filtering"]
+        RefererFilter["Referer filtering"]
+        ContentFilter["Content-based filters"]
+        TrackBackValid["TrackBack validation"]
+        XSSSanitization["XSS sanitization"]
+        FileUploadRestrict["File upload restrictions"]
+    end
 
-Layer 5: Content Security
-  ├── Comment approval workflow
-  ├── CAPTCHA (JCaptcha / ReCaptcha)
-  ├── Spam filtering
-  │   ├── Referer filtering
-  │   ├── Content-based filters
-  │   └── TrackBack validation
-  ├── XSS sanitization
-  └── File upload restrictions
+    subgraph Layer6["Layer 6: Audit & Logging"]
+        AccessLogs["Access logs"]
+        SecurityEvents["Security events"]
+        UserActivity["User activity tracking"]
+    end
 
-Layer 6: Audit & Logging
-  ├── Access logs
-  ├── Security events
-  └── User activity tracking
+    Layer1 --> Layer2
+    Layer2 --> Layer3
+    Layer3 --> Layer4
+    Layer4 --> Layer5
+    Layer5 --> Layer6
 ```
 
 ### 6.2 Security Considerations
@@ -725,52 +624,25 @@ Plugins are configured in:
 
 ### 9.2 Architecture Evolution Path
 
-```
-Current State (Legacy Monolith)
-         │
-         │ Step 1: Modernize Dependencies
-         ▼
-┌──────────────────────────┐
-│ - Upgrade to Java 17+    │
-│ - Migrate to Spring Boot │
-│ - Update all libraries   │
-└──────────────────────────┘
-         │
-         │ Step 2: Database Migration
-         ▼
-┌──────────────────────────┐
-│ - Migrate file storage   │
-│   to relational DB       │
-│ - Implement JPA/Hibernate│
-│ - Maintain file DAO for  │
-│   backward compatibility │
-└──────────────────────────┘
-         │
-         │ Step 3: API Modernization
-         ▼
-┌──────────────────────────┐
-│ - Add REST API layer     │
-│ - Replace DWR with REST  │
-│ - Keep XML-RPC for       │
-│   backward compat        │
-└──────────────────────────┘
-         │
-         │ Step 4: Frontend Modernization
-         ▼
-┌──────────────────────────┐
-│ - SPA (React/Vue/Angular)│
-│ - Progressive Web App    │
-│ - Mobile apps            │
-└──────────────────────────┘
-         │
-         │ Step 5: Microservices (Optional)
-         ▼
-┌──────────────────────────┐
-│ - Content Service        │
-│ - User Service           │
-│ - Search Service         │
-│ - Media Service          │
-└──────────────────────────┘
+```mermaid
+graph TB
+    Current["Current State<br/>(Legacy Monolith)"]
+
+    Step1["Step 1: Modernize Dependencies<br/>────────────────────────<br/>• Upgrade to Java 17+<br/>• Migrate to Spring Boot<br/>• Update all libraries"]
+
+    Step2["Step 2: Database Migration<br/>────────────────────────<br/>• Migrate file storage to relational DB<br/>• Implement JPA/Hibernate<br/>• Maintain file DAO for backward compatibility"]
+
+    Step3["Step 3: API Modernization<br/>────────────────────────<br/>• Add REST API layer<br/>• Replace DWR with REST<br/>• Keep XML-RPC for backward compat"]
+
+    Step4["Step 4: Frontend Modernization<br/>────────────────────────<br/>• SPA (React/Vue/Angular)<br/>• Progressive Web App<br/>• Mobile apps"]
+
+    Step5["Step 5: Microservices (Optional)<br/>────────────────────────<br/>• Content Service<br/>• User Service<br/>• Search Service<br/>• Media Service"]
+
+    Current --> Step1
+    Step1 --> Step2
+    Step2 --> Step3
+    Step3 --> Step4
+    Step4 --> Step5
 ```
 
 ---
@@ -835,38 +707,40 @@ Pebble represents a **well-structured layered monolithic architecture** typical 
 
 ## Appendix B: Package Structure
 
-```
-net.sourceforge.pebble/
-├── aggregator/          News feed aggregation
-├── api/                 Plugin interfaces
-├── comparator/          Sorting comparators
-├── confirmation/        CAPTCHA and spam prevention
-├── dao/                 Data access objects
-│   └── file/            File-based DAO implementations
-├── decorator/           Content/page decorators
-├── domain/              Core domain models
-├── event/               Event listeners
-│   ├── blog/
-│   ├── blogentry/
-│   ├── comment/
-│   ├── response/
-│   └── trackback/
-├── index/               Lucene indexing
-├── logging/             Access logging
-├── plugins/             Plugin implementations
-├── security/            Security realm implementations
-├── service/             Business services
-└── web/                 Web layer
-    ├── action/          Controller actions
-    ├── controller/      Servlets
-    ├── dwr/             AJAX handlers
-    ├── filter/          Request filters
-    ├── listener/        Lifecycle listeners
-    ├── model/           View models
-    ├── security/        Web security
-    ├── servlet/         Custom servlets
-    ├── tagext/          JSP tag libraries
-    └── view/            View renderers
+```mermaid
+graph TB
+    root["net.sourceforge.pebble/"]
+
+    root --> aggregator["aggregator/<br/><i>News feed aggregation</i>"]
+    root --> api["api/<br/><i>Plugin interfaces</i>"]
+    root --> comparator["comparator/<br/><i>Sorting comparators</i>"]
+    root --> confirmation["confirmation/<br/><i>CAPTCHA and spam prevention</i>"]
+    root --> dao["dao/<br/><i>Data access objects</i>"]
+    dao --> daofile["file/<br/><i>File-based DAO implementations</i>"]
+    root --> decorator["decorator/<br/><i>Content/page decorators</i>"]
+    root --> domain["domain/<br/><i>Core domain models</i>"]
+    root --> event["event/<br/><i>Event listeners</i>"]
+    event --> eventblog["blog/"]
+    event --> eventblogentry["blogentry/"]
+    event --> eventcomment["comment/"]
+    event --> eventresponse["response/"]
+    event --> eventtrackback["trackback/"]
+    root --> index["index/<br/><i>Lucene indexing</i>"]
+    root --> logging["logging/<br/><i>Access logging</i>"]
+    root --> plugins["plugins/<br/><i>Plugin implementations</i>"]
+    root --> security["security/<br/><i>Security realm implementations</i>"]
+    root --> service["service/<br/><i>Business services</i>"]
+    root --> web["web/<br/><i>Web layer</i>"]
+    web --> webaction["action/<br/><i>Controller actions</i>"]
+    web --> webcontroller["controller/<br/><i>Servlets</i>"]
+    web --> webdwr["dwr/<br/><i>AJAX handlers</i>"]
+    web --> webfilter["filter/<br/><i>Request filters</i>"]
+    web --> weblistener["listener/<br/><i>Lifecycle listeners</i>"]
+    web --> webmodel["model/<br/><i>View models</i>"]
+    web --> websecurity["security/<br/><i>Web security</i>"]
+    web --> webservlet["servlet/<br/><i>Custom servlets</i>"]
+    web --> webtagext["tagext/<br/><i>JSP tag libraries</i>"]
+    web --> webview["view/<br/><i>View renderers</i>"]
 ```
 
 ---
