@@ -272,8 +272,8 @@ This framework leverages diagrams to create visual documentation that serves bot
 Run the provided setup script:
 
 ```bash
-chmod +x setup_modernization-docs.sh
-./setup-modernization-docs.sh
+chmod +x setup-modernization-docs-structure.sh
+./setup-modernization-docs-structure.sh [project root directory]
 ```
 
 ### Step 2: Begin Phase 1 (Preparation)
