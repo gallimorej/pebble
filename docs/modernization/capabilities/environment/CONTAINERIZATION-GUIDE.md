@@ -1,4 +1,5 @@
-# Legacy Application Containerization Guide
+````markdown
+# Legacy Application Containerization Guide - v2
 
 ## 🚨 CRITICAL SAFETY CONSTRAINT
 **READ-ONLY DISCOVERY - NO SOURCE MODIFICATIONS**
@@ -20,6 +21,8 @@ This guide provides systematic steps for **containerizing the existing legacy ap
 - **Prevent dependency conflicts** with modern system packages
 - **Create a clean baseline** for future modernization efforts
 - **Document the legacy runtime environment** for transformation planning
+- **Address multi-architecture compatibility** ✨ **NEW**
+- **Handle complex environment variable requirements** ✨ **NEW**
 
 ### What This Is NOT:
 - ❌ Modernizing the application architecture
@@ -32,8 +35,10 @@ This guide provides systematic steps for **containerizing the existing legacy ap
 - ✅ Preserving all current dependencies and versions
 - ✅ Maintaining identical runtime behavior
 - ✅ Isolating legacy components from the host system
+- ✅ **Ensuring cross-platform compatibility** ✨ **NEW**
+- ✅ **Properly handling environment variables and runtime paths** ✨ **NEW**
 
-## Legacy Dependency Isolation Process
+## Enhanced Legacy Dependency Isolation Process ✨
 
 ### 1. Legacy Runtime Environment Capture
 
@@ -41,497 +46,697 @@ This guide provides systematic steps for **containerizing the existing legacy ap
 **Capture the precise versions of everything the legacy app uses:**
 
 ```markdown
-# Legacy Runtime Environment Snapshot
+# Legacy Runtime Environment Snapshot - Enhanced
 
 ## Current Production Environment
 - **Operating System**: [Exact OS and version currently used]
+- **Architecture**: [ARM64/AMD64/x86_64] ✨ NEW
 - **Runtime Platform**: [e.g., Java 8 build 251, Python 2.7.16, .NET Framework 4.5.2]
 - **Web/App Server**: [e.g., Tomcat 7.0.47, IIS 7.5, Apache 2.2.15]
 - **Database Client Libraries**: [e.g., Oracle JDBC 11.2.0.4, MySQL Connector 5.1.40]
 - **System Libraries**: [Any specific system dependencies]
 
+## Multi-Architecture Considerations ✨ NEW
+- **Development Environment**: [Current development architecture]
+- **Target Deployment**: [Production deployment architecture]
+- **Cross-Platform Requirements**: [Must work on both ARM64 and AMD64?]
+- **Architecture-Specific Paths**: [Document different paths by architecture]
+
 ⚠️ **Critical**: Document EXACT versions, not "latest" or "compatible" versions
+⚠️ **Critical**: Document architecture-specific variations in paths and configurations
 ```
 
-#### B. Legacy Dependency Inventory
-**Catalog all dependencies that must be preserved in the container:**
+#### B. Enhanced Legacy Dependency Inventory ✨
+
+**Enhanced comprehensive dependency capture with architecture awareness:**
 
 ```bash
-# Comprehensive dependency capture
-echo "=== LEGACY DEPENDENCY INVENTORY ===" > project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
+# Enhanced dependency capture with architecture considerations
+echo "=== ENHANCED LEGACY DEPENDENCY INVENTORY ===" > project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
 
-# Java applications - capture exact JAR versions
+# Architecture information
+echo "=== ARCHITECTURE INFORMATION ===" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+echo "Current Architecture: $(uname -m)" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+echo "OS: $(uname -s) $(uname -r)" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+
+# Java applications - enhanced analysis
 if [ -d "lib" ] || find . -name "*.jar" | grep -q .; then
-    echo "--- Java Dependencies ---" >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
-    find . -name "*.jar" -exec ls -la {} \; >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
+    echo "--- Java Dependencies with Architecture Details ---" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
     
-    # Maven dependencies (if applicable)
+    # Current Java environment
+    java -version >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt 2>&1
+    echo "JAVA_HOME: $JAVA_HOME" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+    
+    # Architecture-specific Java paths
+    echo "--- Java Installation Paths by Architecture ---" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+    find /usr/lib/jvm -name "*amd64*" 2>/dev/null >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+    find /usr/lib/jvm -name "*arm64*" 2>/dev/null >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+    
+    # JAR analysis
+    echo "--- JAR Files and Versions ---" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+    find . -name "*.jar" -exec ls -la {} \; >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+    
+    # Maven dependencies with enhanced analysis
     if [ -f "pom.xml" ]; then
-        echo "--- Maven Dependencies ---" >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
-        cat pom.xml >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
+        echo "--- Maven Dependencies Analysis ---" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+        grep -A5 -B5 "version>" pom.xml >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt 2>/dev/null
+        
+        # Check for potential multi-architecture issues
+        echo "--- Potential Architecture-Specific Dependencies ---" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+        grep -i "native\|jni\|platform" pom.xml >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt 2>/dev/null || echo "No obvious architecture-specific dependencies found"
     fi
 fi
 
-# Node.js applications - capture exact package versions
-if [ -f "package.json" ]; then
-    echo "--- Node.js Dependencies ---" >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
-    cat package.json >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
-    
-    # Also capture package-lock.json for exact versions
-    if [ -f "package-lock.json" ]; then
-        echo "--- Exact Package Versions ---" >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
-        cat package-lock.json >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
+# Enhanced environment variables capture
+echo "--- Environment Variables Analysis ---" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+env | grep -i "java\|home\|path\|catalina\|tomcat" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+
+# Container compatibility pre-check
+if command -v docker &> /dev/null; then
+    echo "--- Container Environment Information ---" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+    docker --version >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt
+    docker system info --format "{{.OSType}}/{{.Architecture}}" >> project-artifacts/01-discover/environment/containerization/enhanced-legacy-deps.txt 2>/dev/null
+fi
+```
+
+### 2. **NEW: Multi-Architecture Compatibility Assessment** ✨
+
+#### A. Architecture-Specific Environment Analysis
+**Document architecture variations that affect containerization:**
+
+```bash
+cat > project-artifacts/01-discover/environment/containerization/multi-arch-analysis.md << 'EOF'
+# Multi-Architecture Containerization Analysis
+
+## Current Environment Architecture
+- **Development Platform**: [ARM64 MacBook/AMD64 Linux/etc.]
+- **Production Platform**: [AMD64 cloud instances/ARM64 Graviton/etc.]
+- **Container Platform**: [Docker Desktop/Kubernetes/etc.]
+
+## Architecture-Specific Path Mappings
+
+### Java Runtime Paths by Architecture
+| Architecture | Java 8 Path | Default Java Symlink Strategy |
+|-------------|-------------|------------------------------|
+| AMD64 | `/usr/lib/jvm/java-8-openjdk-amd64` | Link to `/usr/lib/jvm/default-java` |
+| ARM64 | `/usr/lib/jvm/java-8-openjdk-arm64` | Link to `/usr/lib/jvm/default-java` |
+| Universal | `/usr/lib/jvm/default-java` | ✅ **RECOMMENDED** |
+
+### Container Base Image Architecture Support
+- **Ubuntu 18.04/20.04**: ✅ Supports both ARM64 and AMD64
+- **OpenJDK Images**: ✅ Multi-arch manifests available
+- **Alpine Linux**: ✅ Both architectures supported
+- **Custom Legacy Images**: ⚠️ May need architecture-specific builds
+
+## Architecture Compatibility Issues Identified
+- [ ] **Hardcoded Architecture Paths**: Any hardcoded `/usr/lib/jvm/java-8-openjdk-amd64` paths
+- [ ] **Native Dependencies**: JNI libraries or native code requiring specific architectures
+- [ ] **Container Build Scripts**: Build scripts assuming specific architecture
+- [ ] **Environment Variable Assumptions**: JAVA_HOME set to architecture-specific paths
+
+## Multi-Architecture Container Strategy
+- **Approach**: [Universal symlinks/Architecture detection/Multi-arch builds]
+- **Base Image**: [Specific image that supports both ARM64 and AMD64]
+- **Build Strategy**: [Single Dockerfile with architecture detection/Separate Dockerfiles/Multi-arch manifest]
+- **Testing Plan**: [Build and test on both architectures]
+
+## Implementation Pattern for Architecture Independence
+```dockerfile
+# RECOMMENDED: Architecture-aware universal setup
+RUN arch=$(dpkg --print-architecture) && \
+    if [ "$arch" = "amd64" ]; then \
+        JAVA_ARCH_PATH="/usr/lib/jvm/java-8-openjdk-amd64"; \
+    elif [ "$arch" = "arm64" ]; then \
+        JAVA_ARCH_PATH="/usr/lib/jvm/java-8-openjdk-arm64"; \
+    else \
+        JAVA_ARCH_PATH="/usr/lib/jvm/java-8-openjdk"; \
+    fi && \
+    ln -sf "$JAVA_ARCH_PATH" /usr/lib/jvm/default-java
+
+# Set universal environment variables
+ENV JAVA_HOME=/usr/lib/jvm/default-java
+ENV PATH=$PATH:$JAVA_HOME/bin
+```
+EOF
+```
+
+#### B. Container Environment Variable Strategy ✨
+**Enhanced environment variable handling for containerized legacy apps:**
+
+```bash
+cat > project-artifacts/01-discover/environment/containerization/env-var-strategy.md << 'EOF'
+# Container Environment Variable Strategy
+
+## Current Application Environment Variable Analysis
+- **Critical Variables**: [JAVA_HOME, CATALINA_HOME, PATH, etc.]
+- **Application-Specific**: [Custom env vars the app expects]
+- **System Integration**: [Database URLs, external service endpoints]
+- **Security-Related**: [Keystore paths, certificate locations]
+
+## Environment Variable Propagation Challenges
+1. **Shell Context**: Environment variables set in Dockerfile may not propagate to shell scripts
+2. **User Context**: Variables available to root may not be available to application user
+3. **Runtime Context**: Variables set at build time vs. runtime requirements
+4. **Container vs Host**: Different variable resolution in container environment
+
+## Environment Variable Patterns for Legacy Apps
+
+### Pattern 1: Universal Environment Setup (RECOMMENDED)
+```dockerfile
+# Set in multiple contexts to ensure propagation
+ENV JAVA_HOME=/usr/lib/jvm/default-java
+ENV CATALINA_HOME=/opt/tomcat
+ENV PATH=$PATH:$JAVA_HOME/bin:$CATALINA_HOME/bin
+
+# Also set in system environment file for shell scripts
+RUN echo 'export JAVA_HOME=/usr/lib/jvm/default-java' >> /etc/environment && \
+    echo 'export CATALINA_HOME=/opt/tomcat' >> /etc/environment && \
+    echo 'export PATH=$PATH:$JAVA_HOME/bin:$CATALINA_HOME/bin' >> /etc/environment
+
+# Create startup script that ensures variables are set
+RUN echo '#!/bin/bash' > /usr/local/bin/ensure-env.sh && \
+    echo 'source /etc/environment' >> /usr/local/bin/ensure-env.sh && \
+    echo 'exec "$@"' >> /usr/local/bin/ensure-env.sh && \
+    chmod +x /usr/local/bin/ensure-env.sh
+
+# Use the wrapper script as entrypoint
+ENTRYPOINT ["/usr/local/bin/ensure-env.sh"]
+```
+
+### Pattern 2: Legacy-Specific Variable Handling
+```dockerfile
+# For applications that expect specific legacy environment patterns
+ENV JAVA_OPTS="-Xmx1024m -Xms512m -XX:MaxPermSize=256m"
+ENV CATALINA_OPTS="-Djava.security.egd=file:/dev/./urandom"
+ENV JRE_HOME=$JAVA_HOME
+
+# Legacy applications often expect these specific variable patterns
+ENV TOMCAT_HOME=/opt/tomcat
+ENV SERVLET_HOME=/opt/tomcat
+```
+
+### Pattern 3: Runtime Environment Variable Injection
+```yaml
+# Docker Compose example for runtime environment injection
+environment:
+  - JAVA_HOME=/usr/lib/jvm/default-java
+  - CATALINA_HOME=/opt/tomcat
+  - JAVA_OPTS=-Xmx1024m -Xms512m
+  - APP_DATA_DIR=/app/data
+```
+
+## Environment Variable Testing Strategy
+```bash
+# Test script to verify environment variables are properly set
+#!/bin/bash
+echo "=== Environment Variable Test ==="
+echo "JAVA_HOME: $JAVA_HOME"
+echo "CATALINA_HOME: $CATALINA_HOME"  
+echo "PATH: $PATH"
+echo "Java executable: $(which java)"
+echo "Java version: $(java -version 2>&1 | head -1)"
+
+# Test that variables are available in different contexts
+su - appuser -c 'echo "User context JAVA_HOME: $JAVA_HOME"'
+bash -c 'echo "Bash context JAVA_HOME: $JAVA_HOME"'
+sh -c 'echo "Shell context JAVA_HOME: $JAVA_HOME"'
+```
+EOF
+```
+
+### 3. Enhanced Container Isolation Strategy ✨
+
+#### A. Enhanced Base Image Selection for Legacy Apps
+**Updated with multi-architecture and environment considerations:**
+
+```bash
+cat > project-artifacts/01-discover/environment/containerization/enhanced-base-image.md << 'EOF'
+# Enhanced Legacy Application Base Image Strategy
+
+## Multi-Architecture Base Image Compatibility Matrix
+
+### For Java Legacy Apps (Java 6-8) - Enhanced
+| Base Image | ARM64 Support | AMD64 Support | Java Versions | Legacy Compatibility | Recommended |
+|-----------|--------------|--------------|---------------|-------------------|-------------|
+| `openjdk:8u252-jdk` | ✅ | ✅ | Java 8 | ✅ Good | **RECOMMENDED** |
+| `ubuntu:18.04` + manual Java | ✅ | ✅ | Configurable | ✅ Excellent | Good for legacy |
+| `ubuntu:20.04` + manual Java | ✅ | ✅ | Java 8+ | ⚠️ May lack Java 6 packages | Modern choice |
+| `amazoncorretto:8` | ✅ | ✅ | Java 8 | ✅ Good | AWS environments |
+
+### Architecture-Specific Considerations
+- **ARM64 Benefits**: Better performance on Apple Silicon, AWS Graviton instances
+- **AMD64 Compatibility**: Broadest ecosystem support, most legacy package availability
+- **Multi-arch Manifests**: Choose images with multi-arch manifests for automatic selection
+
+### Recommended Base Image Strategy: **Ubuntu 18.04 LTS**
+- **Rationale**: Last Ubuntu version with reliable Java 6-8 package availability
+- **Multi-arch Support**: ✅ Native ARM64 and AMD64 support
+- **Legacy Package Availability**: ✅ Old package versions still available
+- **Container Size**: Larger but more compatible with legacy requirements
+- **Security Updates**: Still receives security updates
+
+## Enhanced Container Image Build Strategy
+
+### Multi-Stage Build with Architecture Awareness
+```dockerfile
+# ENHANCED: Multi-stage build with architecture detection
+FROM maven:3.8-openjdk-8 AS builder
+WORKDIR /build
+COPY pom.xml .
+COPY src/ src/
+RUN mvn clean package -DskipTests
+
+# Runtime stage with enhanced architecture handling  
+FROM ubuntu:18.04
+
+# Architecture detection and Java setup
+RUN arch=$(dpkg --print-architecture) && \
+    echo "Building for architecture: $arch" && \
+    apt-get update && \
+    apt-get install -y openjdk-8-jdk wget curl ca-certificates && \
+    if [ "$arch" = "amd64" ]; then \
+        JAVA_PATH="/usr/lib/jvm/java-8-openjdk-amd64"; \
+    elif [ "$arch" = "arm64" ]; then \
+        JAVA_PATH="/usr/lib/jvm/java-8-openjdk-arm64"; \
+    else \
+        JAVA_PATH="/usr/lib/jvm/java-8-openjdk"; \
+    fi && \
+    ln -sf "$JAVA_PATH" /usr/lib/jvm/default-java && \
+    rm -rf /var/lib/apt/lists/*
+
+# Universal environment setup
+ENV JAVA_HOME=/usr/lib/jvm/default-java
+ENV PATH=$PATH:$JAVA_HOME/bin
+```
+
+### Container Size Optimization vs. Legacy Compatibility
+- **Development**: Use full Ubuntu image for maximum compatibility
+- **Production**: Consider multi-stage builds to reduce final image size
+- **Legacy Dependencies**: Don't optimize at the expense of breaking legacy functionality
+
+## Enhanced Security Considerations for Legacy Containers
+
+### Container-Level Security Isolation
+```dockerfile
+# Enhanced security for legacy apps
+RUN groupadd -r legacyapp && useradd -r -g legacyapp legacyapp
+RUN chown -R legacyapp:legacyapp /app
+USER legacyapp
+
+# Security context settings
+RUN mkdir -p /app/data /app/logs && \
+    chmod 755 /app/data /app/logs
+```
+
+### Network Security for Legacy Apps
+```yaml
+# Docker Compose security configuration
+networks:
+  legacy-net:
+    driver: bridge
+    internal: true  # Isolate legacy app from external networks
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+```
+EOF
+```
+
+### 4. **NEW: Common Implementation Issues and Solutions** ✨
+
+#### A. Architecture-Specific Problem Patterns
+**Document common issues and their solutions:**
+
+```bash
+cat > project-artifacts/01-discover/environment/containerization/implementation-troubleshooting.md << 'EOF'
+# Legacy Containerization Implementation Troubleshooting
+
+## Common Architecture-Related Issues
+
+### Issue 1: Java Runtime Not Found
+**Symptoms**: 
+- `java: command not found` in container
+- `JAVA_HOME not set` errors
+- Application fails to start with Java path errors
+
+**Root Causes**:
+- Architecture-specific Java paths hardcoded (e.g., `/usr/lib/jvm/java-8-openjdk-amd64`)
+- JAVA_HOME not properly set for container environment
+- Environment variables not propagating to application startup context
+
+**Solutions**:
+```dockerfile
+# Solution 1: Universal Java path setup
+ENV JAVA_HOME=/usr/lib/jvm/default-java
+RUN ln -sf /usr/lib/jvm/java-8-openjdk-* /usr/lib/jvm/default-java
+ENV PATH=$PATH:$JAVA_HOME/bin
+
+# Solution 2: Architecture detection
+RUN arch=$(dpkg --print-architecture) && \
+    if [ "$arch" = "amd64" ]; then \
+        ln -s /usr/lib/jvm/java-8-openjdk-amd64 /usr/lib/jvm/default-java; \
+    elif [ "$arch" = "arm64" ]; then \
+        ln -s /usr/lib/jvm/java-8-openjdk-arm64 /usr/lib/jvm/default-java; \
     fi
-fi
 
-# Python applications - capture exact versions
-if [ -f "requirements.txt" ]; then
-    echo "--- Python Dependencies ---" >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
-    cat requirements.txt >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
-fi
-
-# .NET applications
-if find . -name "*.csproj" | grep -q .; then
-    echo "--- .NET Dependencies ---" >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
-    find . -name "*.csproj" -exec cat {} \; >> project-artifacts/01-discover/environment/containerization/legacy-deps-inventory.txt
-fi
+# Solution 3: Environment variable verification
+RUN java -version  # Verify Java works during build
 ```
 
-### 2. Legacy Build Environment Replication
+### Issue 2: Container Builds on One Architecture but Fails on Another
+**Symptoms**:
+- Builds successfully on Intel Mac but fails on M1/M2 Mac
+- Works on AMD64 cloud instances but fails on ARM64 instances
+- "platform not supported" errors
 
-#### A. Build Tool Version Capture
-**Document the exact build environment that works today:**
+**Root Causes**:
+- Base image doesn't support target architecture
+- Architecture-specific package names or paths
+- Native dependencies that require specific architectures
 
-```bash
-# Create legacy build environment snapshot
-cat > project-artifacts/01-discover/environment/containerization/legacy-build-env.md << 'EOF'
-# Legacy Build Environment Snapshot
+**Solutions**:
+```dockerfile
+# Solution 1: Use multi-architecture base images
+FROM --platform=$BUILDPLATFORM ubuntu:18.04  # Supports multi-arch
 
-## Build Tools and Versions (EXACT VERSIONS REQUIRED)
-- **Build Tool**: [e.g., Maven 3.3.9, Gradle 4.10.3, npm 6.14.8]
-- **Runtime for Build**: [e.g., OpenJDK 8u251, Python 2.7.16, Node.js 10.24.1]
-- **Additional Tools**: [e.g., specific compiler versions, build utilities]
+# Solution 2: Architecture-aware package installation
+RUN arch=$(dpkg --print-architecture) && \
+    if [ "$arch" = "amd64" ]; then \
+        apt-get install -y some-amd64-specific-package; \
+    elif [ "$arch" = "arm64" ]; then \
+        apt-get install -y some-arm64-specific-package; \
+    fi
 
-## Build Environment OS Requirements
-- **Base OS**: [e.g., Ubuntu 16.04, CentOS 7.9, Windows Server 2016]
-- **Required System Packages**: [any OS packages needed for build]
-
-## Build Process (Current Working Commands)
-```bash
-# Document the EXACT commands that work today
-# Example:
-# export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-# mvn clean package -Dmaven.test.skip=true
-# [Add the actual commands here]
+# Solution 3: Multi-architecture build testing
+RUN echo "Built for architecture: $(dpkg --print-architecture)"
 ```
 
-## Critical Build Dependencies
-- **Build-time Dependencies**: [things only needed during build]
-- **Runtime Dependencies**: [things needed when running]
-- **System Libraries**: [OS-level dependencies]
+### Issue 3: Environment Variables Not Available in Application Context
+**Symptoms**:
+- Environment variables work in shell but not when application starts
+- Application startup scripts can't find environment variables
+- Variables set in Dockerfile not available in CMD/ENTRYPOINT
 
-## Environment Variables Required for Build
-- [List any environment variables that must be set]
+**Root Causes**:
+- Environment variables not propagated to shell script context
+- User switching without preserving environment
+- Shell vs. exec form differences in CMD/ENTRYPOINT
 
-## Build Artifacts That Must Work in Container
-- **Primary Artifact**: [e.g., myapp.war, target/myapp.jar, dist/]
-- **Configuration Files**: [files that must be present at runtime]
-- **Assets/Resources**: [static files, templates, etc.]
+**Solutions**:
+```dockerfile
+# Solution 1: Multiple context environment setting
+ENV JAVA_HOME=/usr/lib/jvm/default-java
+RUN echo 'export JAVA_HOME=/usr/lib/jvm/default-java' >> /etc/environment
+
+# Solution 2: Startup script wrapper
+RUN echo '#!/bin/bash' > /startup-wrapper.sh && \
+    echo 'source /etc/environment' >> /startup-wrapper.sh && \
+    echo 'exec "$@"' >> /startup-wrapper.sh && \
+    chmod +x /startup-wrapper.sh
+
+ENTRYPOINT ["/startup-wrapper.sh"]
+CMD ["java", "-jar", "app.jar"]
+
+# Solution 3: Explicit environment loading in startup scripts
+RUN sed -i '1a source /etc/environment' /opt/tomcat/bin/catalina.sh
+```
+
+### Issue 4: Application Server Directory Structure Problems
+**Symptoms**:
+- `catalina.sh` not found or not executable
+- Application server fails to start with path errors
+- Directory permission errors
+
+**Root Causes**:
+- Incorrect extraction of application server archives
+- Files extracted to subdirectory instead of target directory
+- Incorrect file permissions or ownership
+
+**Solutions**:
+```dockerfile
+# Solution 1: Proper archive extraction
+RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.109/bin/apache-tomcat-7.0.109.tar.gz && \
+    tar -xzf apache-tomcat-7.0.109.tar.gz -C /opt/ && \
+    mv /opt/apache-tomcat-7.0.109/* /opt/tomcat/ && \
+    rmdir /opt/apache-tomcat-7.0.109 && \
+    rm apache-tomcat-7.0.109.tar.gz
+
+# Solution 2: Verify directory structure and permissions
+RUN ls -la /opt/tomcat/bin/ && \
+    chmod +x /opt/tomcat/bin/*.sh && \
+    chown -R appuser:appuser /opt/tomcat
+
+# Solution 3: Test startup script availability  
+RUN /opt/tomcat/bin/catalina.sh version  # Test during build
+```
+
+## Implementation Validation Checklist ✨ NEW
+
+### Pre-Implementation Validation
+- [ ] **Architecture Compatibility**: Container builds on both ARM64 and AMD64
+- [ ] **Environment Variables**: All critical variables accessible in application context
+- [ ] **Directory Structure**: Application server/framework directories properly structured
+- [ ] **File Permissions**: Executable permissions set correctly
+- [ ] **Java Runtime**: Java accessible and working in container
+
+### Post-Implementation Validation
+- [ ] **Application Startup**: Application starts successfully in container
+- [ ] **Health Check**: Application responds to health check requests
+- [ ] **Functionality**: Core application features work correctly
+- [ ] **Performance**: Application performance comparable to non-containerized version
+- [ ] **Resource Usage**: Memory and CPU usage within expected ranges
+
+### Cross-Platform Validation
+```bash
+# Test script for multi-architecture validation
+#!/bin/bash
+echo "=== Multi-Architecture Container Validation ==="
+
+# Build for AMD64
+docker buildx build --platform linux/amd64 -t myapp:amd64 .
+echo "AMD64 build: $?"
+
+# Build for ARM64  
+docker buildx build --platform linux/arm64 -t myapp:arm64 .
+echo "ARM64 build: $?"
+
+# Test both architectures (if available)
+docker run --rm --platform linux/amd64 myapp:amd64 java -version
+docker run --rm --platform linux/arm64 myapp:arm64 java -version
+
+echo "Validation complete"
+```
 EOF
 ```
 
-#### B. Legacy Runtime Requirements
-**Capture what the application needs to run as-is:**
+### 5. Enhanced Legacy Application "As-Is" Containerization Plan ✨
+
+#### A. Enhanced Minimal Change Containerization
+**Updated strategy with architecture and environment considerations:**
 
 ```bash
-cat > project-artifacts/01-discover/environment/containerization/legacy-runtime-reqs.md << 'EOF'
-# Legacy Runtime Requirements (AS-IS)
-
-## Runtime Platform Requirements
-- **Primary Runtime**: [e.g., Java 8 JRE build 251, Python 2.7.16, .NET Framework 4.5.2]
-- **Application Server**: [e.g., Tomcat 7.0.94, IIS 7.5 - EXACT versions]
-- **Web Server**: [if separate from app server]
-
-## System-Level Dependencies
-- **OS Type**: [Linux distro/version that app currently runs on]
-- **System Libraries**: [any shared libraries required]
-- **System Packages**: [OS packages that must be installed]
-
-## Legacy Configuration Patterns
-- **Config File Locations**: [where app expects config files]
-- **Log File Locations**: [where app writes logs]
-- **Data Directory Locations**: [any file system paths app uses]
-- **Environment Variables**: [variables app expects to be set]
-
-## Legacy Network/Port Configuration
-- **Application Port**: [port app currently uses]
-- **Admin/Management Ports**: [any additional ports]
-- **Protocol Requirements**: [HTTP, HTTPS, custom protocols]
-
-## Legacy Security/User Requirements
-- **User/Group**: [what user app runs as]
-- **File Permissions**: [any specific permission requirements]
-- **Security Context**: [any special security requirements]
-EOF
-```
-
-### 3. Container Isolation Strategy
-
-#### A. Base Image Selection for Legacy Apps
-**Choose base images that can support old dependencies:**
-
-```bash
-cat > project-artifacts/01-discover/environment/containerization/legacy-base-image.md << 'EOF'
-# Legacy Application Base Image Strategy
-
-## Legacy Runtime Compatibility Matrix
-
-### For Java Legacy Apps (Java 6-8)
-- **Option 1**: `openjdk:8u252-jdk` (for Java 8 apps)
-- **Option 2**: `openjdk:7u261-jdk` (for Java 7 apps)  
-- **Option 3**: Custom image based on `ubuntu:16.04` + manual Java install
-- **Rationale**: Matches production environment, supports legacy frameworks
-
-### For Python Legacy Apps (Python 2.x)
-- **Option 1**: `python:2.7.18-slim` (official Python 2.7 - now deprecated)
-- **Option 2**: `ubuntu:18.04` + manual Python 2.7 install
-- **Option 3**: Custom build with old pip/setuptools versions
-- **Rationale**: Many legacy Python apps require Python 2.7 and old packages
-
-### For .NET Legacy Apps (.NET Framework)
-- **Option 1**: `mcr.microsoft.com/dotnet/framework/runtime:4.8`
-- **Option 2**: `mcr.microsoft.com/dotnet/framework/runtime:4.5.2`
-- **Option 3**: Windows Server Core base images
-- **Rationale**: .NET Framework apps cannot run on .NET Core/modern runtimes
-
-### For Node.js Legacy Apps (Node 6-10)
-- **Option 1**: `node:10.24.1-alpine` (for Node 10 apps)
-- **Option 2**: `node:8.17.0-alpine` (for older Node 8 apps)
-- **Option 3**: Custom Ubuntu with specific Node version
-- **Rationale**: Modern Node versions break legacy JavaScript dependencies
-
-## Recommended Base Image: [Document choice]
-- **Image**: [specific tag]
-- **Version Lock Rationale**: [why this exact version]
-- **Legacy Support**: [what old dependencies it supports]
-- **Known Issues**: [any compatibility issues identified]
-EOF
-```
-
-#### B. Dependency Isolation Plan
-**Strategy for containing problematic legacy dependencies:**
-
-```bash
-cat > project-artifacts/01-discover/environment/containerization/dependency-isolation.md << 'EOF'
-# Legacy Dependency Isolation Strategy
-
-## Problematic Dependencies Identified
-- **Old Framework Versions**: [e.g., Spring 2.x, Angular 1.x, jQuery 1.x]
-- **Deprecated Libraries**: [libraries no longer maintained]
-- **Security Vulnerabilities**: [known CVEs in legacy deps - document but don't fix yet]
-- **Conflicting Versions**: [deps that conflict with modern system packages]
-
-## Container Isolation Benefits
-✅ **System Protection**: Legacy deps cannot affect host OS
-✅ **Version Conflicts Avoided**: No conflicts with modern system packages  
-✅ **Security Containment**: Vulnerable legacy deps contained within container
-✅ **Reproducible Environment**: Exact legacy environment preserved
-✅ **Safe Experimentation**: Can test changes without affecting host
-
-## Isolation Boundaries
-- **Network Isolation**: Container runs on isolated network
-- **File System Isolation**: Legacy app cannot access host file system
-- **Process Isolation**: Legacy processes contained within container
-- **Resource Isolation**: Memory/CPU limits prevent resource exhaustion
-
-## Legacy Environment Preservation
-- **Package Versions**: Pin exact versions of all packages
-- **System Configuration**: Replicate current OS config in container
-- **Environment Variables**: Preserve all current env var settings
-- **File Permissions**: Maintain current permission structure
-EOF
-```
-
-### 4. Legacy Application "As-Is" Containerization Plan
-
-#### A. Minimal Change Containerization
-**Strategy for containerizing without changing the app:**
-
-```bash
-cat > project-artifacts/01-discover/environment/containerization/minimal-change-plan.md << 'EOF'
-# Legacy Application "As-Is" Containerization Plan
+cat > project-artifacts/01-discover/environment/containerization/enhanced-minimal-change-plan.md << 'EOF'
+# Enhanced Legacy Application "As-Is" Containerization Plan
 
 ## Core Principle: ZERO APPLICATION CHANGES
 The legacy application should run in the container EXACTLY as it runs today, with no code or configuration changes.
 
-## Containerization Approach: Lift-and-Shift
+## Enhanced Containerization Approach: Lift-and-Shift Plus
 1. **Replicate Current Environment**: Create container that matches current runtime exactly
 2. **Preserve File Paths**: Keep all file paths exactly as they are now
 3. **Maintain Port Configuration**: Use same ports application currently uses  
 4. **Copy Configuration As-Is**: No config changes, just copy existing files
 5. **Preserve Startup Process**: Use same startup commands/scripts
+6. **✨ ADD: Multi-Architecture Compatibility**: Ensure works on ARM64 and AMD64
+7. **✨ ADD: Environment Variable Robustness**: Ensure variables work in container context
 
-## Container Structure Plan
+## Enhanced Container Structure Plan
 ```
 /app/                          # Application root (matches current deployment)
 ├── [current-app-structure]    # Copy current app structure exactly
 ├── lib/                       # All JARs/libraries (existing versions)
 ├── config/                    # Configuration files (current versions)
 ├── logs/                      # Log directory (if app writes logs)
-└── data/                      # Data directory (if app uses local storage)
+├── data/                      # Data directory (if app uses local storage)
+└── scripts/                   # ✨ NEW: Startup wrapper scripts for env var handling
+    ├── startup-wrapper.sh     # Ensures environment variables are set
+    └── env-setup.sh          # Architecture-aware environment setup
 ```
 
-## Build Process: Copy Existing Build
+## Enhanced Build Process: Copy Existing Build Plus Environment Setup
 1. **Use Current Build Output**: Take WAR/JAR/executable as built today
 2. **Copy Dependencies**: Include all current dependencies with exact versions
 3. **Copy Configuration**: Include all config files from current deployment
 4. **Copy Assets**: Include all static files, templates, etc.
+5. **✨ ADD: Architecture Detection**: Add universal environment setup
+6. **✨ ADD: Environment Validation**: Test environment variables during build
 
-## NO Modern Container Optimizations (Yet)
+## Enhanced Container Best Practices for Legacy Apps
+
+### DO in Enhanced Legacy Containerization ✅
+✅ Make it run in a container exactly as it runs now
+✅ Add architecture detection for universal compatibility
+✅ Ensure environment variables work in all contexts  
+✅ Test basic functionality during container build
+✅ Document any container-specific setup required
+✅ Create startup wrapper scripts if needed for environment variables
+
+### DON'T (Still No Modern Container Optimizations) ❌
 ❌ Don't optimize image size
-❌ Don't use multi-stage builds  
-❌ Don't change logging to stdout/stderr
+❌ Don't use multi-stage builds for optimization (use for env setup only)
+❌ Don't change logging to stdout/stderr  
 ❌ Don't externalize configuration
-❌ Don't add health checks
-❌ Don't change startup process
+❌ Don't add modern health checks (unless already exist)
+❌ Don't change startup process beyond environment variable handling
 
-✅ Just make it run in a container exactly as it runs now
-EOF
-```
+## Enhanced Implementation Timeline
 
-#### B. Legacy Runtime Replication
-**Exact steps to replicate current runtime:**
+### Phase 1: Enhanced Proof of Concept (1-3 days)
+**Goal**: Get legacy app running in a container with multi-architecture support
 
-```bash
-cat > project-artifacts/01-discover/environment/containerization/runtime-replication.md << 'EOF'
-# Legacy Runtime Replication Steps
+#### Day 1: Enhanced Environment Replication
+- [ ] Choose multi-architecture base image
+- [ ] Install exact runtime versions with architecture detection
+- [ ] Create universal Java/environment setup
+- [ ] Test that legacy dependencies install on both architectures
 
-## Step 1: Environment Replication
-```dockerfile
-# Preliminary Dockerfile structure (goes in design phase)
-# FROM [legacy-compatible-base-image]
-# 
-# Install exact runtime versions
-# RUN [commands to install exact Java/Python/.NET version]
-# 
-# Install system dependencies
-# RUN [commands to install exact system packages]
-# 
-# Create application directory structure
-# RUN mkdir -p /app/[replicate-current-structure]
-# 
-# Copy application exactly as built
-# COPY [current-build-output] /app/
-# 
-# Set working directory to match current
-# WORKDIR /app
-# 
-# Use exact startup command currently working
-# CMD ["[current-startup-command]"]
-```
-
-## Step 2: Configuration Replication
-- **Copy All Config Files**: Exactly as they exist today
-- **Preserve File Paths**: Use same paths inside container
-- **Maintain Environment Variables**: Set same env vars as current deployment
-- **Keep Same User/Permissions**: Run as same user/group as current
-
-## Step 3: Startup Replication  
-- **Same Startup Script**: Use current startup script/command
-- **Same JVM Args**: Use current Java arguments (if Java app)
-- **Same Environment**: Set same environment variables
-- **Same Working Directory**: Start from same directory
-
-## Step 4: Validation That It's Identical
-- [ ] Application starts with same startup time
-- [ ] Same port responds to requests
-- [ ] Same log output format and location
-- [ ] Same behavior for all current test cases
-- [ ] Same resource usage patterns
-EOF
-```
-
-### 5. Legacy Containerization Success Criteria
-
-#### A. Container Readiness Checklist
-**Verify the legacy app is ready for containerization:**
-
-```bash
-cat > project-artifacts/01-discover/environment/containerization/container-readiness.md << 'EOF'
-# Legacy Application Container Readiness Assessment
-
-## Current Application Assessment
-- [ ] **Portable Build**: Can build app on different machines with consistent results
-- [ ] **Known Dependencies**: All runtime dependencies documented and available
-- [ ] **Reproducible Startup**: Startup process documented and can be scripted
-- [ ] **External Configs**: Know where all config files are located
-- [ ] **Port Configuration**: Application port is configurable or documented
-- [ ] **Database Connections**: External database connections work from any machine
-
-## Containerization Readiness Indicators
-✅ **READY**: Application uses relative paths or configurable absolute paths
-✅ **READY**: All dependencies are in standard package repositories or available as files
-✅ **READY**: Application can run without GUI/desktop environment
-✅ **READY**: No hardcoded localhost connections to external services
-✅ **READY**: Startup process doesn't require interactive input
-
-## Potential Blockers (Need Resolution)
-⚠️ **BLOCKER**: Hardcoded absolute file paths that don't exist in container
-⚠️ **BLOCKER**: Dependencies on Windows-specific APIs (for Linux containers)
-⚠️ **BLOCKER**: Dependencies on specific hostname/machine identity
-⚠️ **BLOCKER**: Required GUI components or desktop environment
-⚠️ **BLOCKER**: Licensing tied to specific machine/MAC address
-
-## Legacy-Specific Considerations
-- **Old Dependency Availability**: Are old package versions still available?
-- **System Library Compatibility**: Do old system libraries work on container OS?
-- **User/Permission Requirements**: Does app require specific users/groups?
-- **Legacy Protocol Support**: Does container OS support old network protocols?
-EOF
-```
-
-#### B. Implementation Timeline for Legacy App
-**Realistic timeline for containerizing legacy application:**
-
-```bash
-cat > project-artifacts/01-discover/environment/containerization/legacy-implementation-timeline.md << 'EOF'
-# Legacy Application Containerization Timeline
-
-## Phase 1: Proof of Concept (1-3 days)
-**Goal**: Get legacy app running in a container locally
-
-### Day 1: Environment Replication
-- [ ] Choose base image that supports legacy runtime
-- [ ] Install exact runtime versions (Java 8, Python 2.7, etc.)
-- [ ] Test that legacy dependencies can be installed
-
-### Day 2: Application Integration  
+#### Day 2: Enhanced Application Integration  
 - [ ] Copy built application into container
-- [ ] Copy all configuration files
-- [ ] Attempt first container startup
+- [ ] Copy all configuration files with enhanced environment variable setup
+- [ ] Create startup wrapper scripts if needed
+- [ ] Attempt first container startup with environment validation
 
-### Day 3: Troubleshooting
-- [ ] Fix path issues, permission problems
-- [ ] Resolve missing dependencies
+#### Day 3: Enhanced Troubleshooting
+- [ ] Fix architecture-specific path issues
+- [ ] Resolve environment variable propagation problems
+- [ ] Fix application server setup issues (directory structure, permissions)
 - [ ] Get application responding on expected port
 
-## Phase 2: Production-Ready Container (3-5 days)
-**Goal**: Container that can replace current deployment
+### Phase 2: Production-Ready Enhanced Container (3-5 days)
+**Goal**: Container that can replace current deployment with multi-arch support
 
-### Days 1-2: Hardening
-- [ ] Document exact Dockerfile that works
+#### Days 1-2: Enhanced Hardening
+- [ ] Document exact Dockerfile that works on both ARM64 and AMD64
 - [ ] Add proper logging directory mounts
-- [ ] Configure data persistence (if needed)
-- [ ] Set up proper user/group permissions
+- [ ] Configure data persistence with proper permissions
+- [ ] Set up proper user/group permissions with architecture awareness
 
-### Days 3-5: Validation
-- [ ] Test all current application functionality
-- [ ] Verify performance matches current deployment  
-- [ ] Test restart/recovery behavior
+#### Days 3-5: Enhanced Validation
+- [ ] Test all current application functionality on multiple architectures
+- [ ] Verify performance matches current deployment on target architecture
+- [ ] Test restart/recovery behavior in container environment
+- [ ] Validate environment variable handling in all startup scenarios
 - [ ] Document any differences from current deployment
 
-## Phase 3: Deployment Integration (2-3 days)
-**Goal**: Deploy containerized version alongside current version
-
-### Days 1-2: Deployment Setup
-- [ ] Create container registry push process
-- [ ] Set up container orchestration (if needed)
-- [ ] Configure monitoring for containerized version
-
-### Day 3: Side-by-Side Testing
-- [ ] Run containerized version parallel to current
-- [ ] Compare behavior, performance, logs
-- [ ] Validate that containerized version is identical
-
-## Success Criteria for Legacy Container
+## Enhanced Success Criteria for Legacy Container
 ✅ **Functional Equivalence**: All features work exactly as they do currently
 ✅ **Performance Equivalence**: Same or better performance than current deployment
 ✅ **Operational Equivalence**: Same logging, monitoring, management capabilities
 ✅ **Dependency Isolation**: Legacy dependencies contained and don't affect host
 ✅ **Reproducible Deployment**: Can deploy to any Docker-capable environment
+✅ **✨ Multi-Architecture Compatibility**: Works on both ARM64 and AMD64
+✅ **✨ Environment Robustness**: Environment variables work correctly in container
+✅ **✨ Startup Reliability**: Application starts consistently across environments
 EOF
 ```
 
-## Integration with Build-and-Run Discovery
+## Enhanced Quality Gates ✨
 
-### Adding Legacy Containerization to Build Instructions Template
-
-Add this section to your existing `build-and-run-instructions.md`:
-
-```markdown
-## Legacy Application Containerization Assessment
-
-### Current Deployment Isolation Needs
-- [ ] **Legacy Dependencies**: Does app use old/deprecated dependencies?
-- [ ] **System Conflicts**: Would dependencies conflict with modern system packages?
-- [ ] **Version Lock Requirements**: Must specific old versions be preserved?
-- [ ] **Security Isolation**: Are there known vulnerabilities in legacy dependencies?
-- [ ] **Environment Consistency**: Does app behave differently across environments?
-
-### Legacy Container Strategy
-- **Isolation Goal**: [Why containerization is needed - dependency isolation, consistency, etc.]
-- **Legacy Runtime**: [Exact runtime versions that must be preserved]
-- **Migration Approach**: Lift-and-shift with zero application changes
-- **Timeline**: [Estimated time to get legacy app running in container]
-
-### Container Readiness for Legacy App
-- [ ] All dependencies documented and available
-- [ ] Build process can be replicated in container
-- [ ] Application runs without GUI/desktop requirements
-- [ ] No hardcoded machine-specific configurations
-- [ ] External database connections work from any machine
-- [ ] File paths are relative or can be made configurable
-
-### Legacy Containerization Deliverables
-1. **Legacy Dependency Inventory**: Complete list of old dependencies with exact versions
-2. **Runtime Environment Snapshot**: Documentation of exact current runtime setup
-3. **Container Base Image Plan**: Strategy for base image that supports legacy runtime
-4. **Minimal Change Plan**: Approach to containerize with zero application changes
-5. **Implementation Timeline**: Realistic timeline for legacy container deployment
-
-### Next Steps for Legacy Container
-1. Complete legacy dependency analysis in `project-artifacts/01-discover/environment/containerization/`
-2. Create proof-of-concept Dockerfile in design phase (no source changes)
-3. Validate container runs identical to current deployment
-4. Plan production container deployment strategy
-
-### Legacy Containerization Benefits
-✅ **Dependency Isolation**: Old dependencies can't affect modern host systems
-✅ **Consistent Deployment**: Same container works across all environments  
-✅ **Risk Reduction**: Legacy app isolated from host system vulnerabilities
-✅ **Modern Infrastructure**: Can deploy legacy app on modern container platforms
-✅ **Preservation**: Exact current behavior preserved while enabling future modernization
-
-### Containerization Risks for Legacy Apps
-⚠️ **Compatibility Issues**: Old dependencies may not work on modern container OS
-⚠️ **Performance Changes**: Container overhead might affect legacy app performance  
-⚠️ **Complexity**: Additional layer of complexity in deployment pipeline
-⚠️ **Limited Support**: Old runtime versions may have limited container image support
-```
-
-## Quality Gates
-
+### Enhanced Container Readiness Checklist
 Before proceeding to design phase, ensure:
 - [ ] All containerization analysis documents completed
 - [ ] Current deployment pattern fully understood
 - [ ] Dependencies and requirements documented
+- [ ] **Multi-architecture compatibility assessed** ✨ **NEW**
+- [ ] **Environment variable strategy defined** ✨ **NEW**
 - [ ] Security considerations identified
-- [ ] Implementation roadmap created
+- [ ] **Implementation troubleshooting patterns documented** ✨ **NEW**
 - [ ] Resource requirements estimated
 - [ ] Integration points with other systems documented
 
-## Output Location
+### **NEW: Implementation Reality Check** ✨
+- [ ] **Technical Assumptions Validated**: Basic container build and runtime tested
+- [ ] **Architecture Issues Identified**: ARM64/AMD64 compatibility issues documented
+- [ ] **Environment Setup Verified**: Critical environment variables work in container
+- [ ] **Common Issues Anticipated**: Known problem patterns documented with solutions
 
-All containerization discovery artifacts go in:
+## Enhanced Output Location
+
+All enhanced containerization discovery artifacts go in:
 `project-artifacts/01-discover/environment/containerization/`
 
-## Next Phase Integration
+### Enhanced Directory Structure ✨
+```
+project-artifacts/01-discover/environment/containerization/
+├── containerization-assessment.md
+├── enhanced-legacy-deps.txt ✨ NEW
+├── multi-arch-analysis.md ✨ NEW
+├── env-var-strategy.md ✨ NEW
+├── enhanced-base-image.md ✨ NEW
+├── implementation-troubleshooting.md ✨ NEW
+├── enhanced-minimal-change-plan.md ✨ NEW
+└── validation-results.md ✨ NEW (if proof-of-concept executed)
+```
 
-The containerization discovery findings will inform:
-- **Design Phase**: Container architecture and deployment strategy
-- **Transform Phase**: Actual Dockerfile and manifest creation  
-- **Validate Phase**: Container-specific testing and validation
+## Integration with Enhanced Build-and-Run Discovery ✨
+
+### **NEW: Enhanced Legacy Containerization Assessment Section**
+
+Add this enhanced section to your existing `build-and-run-instructions.md`:
+
+```markdown
+## Enhanced Legacy Application Containerization Assessment ✨
+
+### Architecture and Environment Compatibility Assessment
+- [ ] **Multi-Architecture Requirements**: Must work on ARM64 and AMD64?
+- [ ] **Environment Variable Complexity**: Complex environment setup needed?
+- [ ] **Legacy Runtime Paths**: Architecture-specific paths requiring universal handling?
+- [ ] **Container Platform Requirements**: Kubernetes/Docker Swarm compatibility needed?
+
+### Enhanced Legacy Container Strategy
+- **Isolation Goal**: [Why containerization is needed - dependency isolation, consistency, etc.]
+- **Architecture Strategy**: [Universal/Multi-arch build/Architecture detection]
+- **Environment Variable Strategy**: [Universal paths/Wrapper scripts/Multi-context setup]
+- **Legacy Runtime Preservation**: [Exact runtime versions that must be preserved]
+- **Implementation Approach**: Enhanced lift-and-shift with environment robustness
+- **Timeline**: [Estimated time based on complexity assessment]
+
+### Enhanced Container Readiness Checklist
+- [ ] All dependencies documented and available
+- [ ] Build process can be replicated in container with multi-arch support
+- [ ] Application runs without GUI/desktop requirements
+- [ ] Environment variables strategy defined for container context
+- [ ] File paths are relative or can be made universal
+- [ ] External database connections work from containerized environment
+- [ ] Architecture-specific issues identified and solutions planned
+
+### Enhanced Implementation Risk Assessment
+- [ ] **Architecture Compatibility**: Risk of ARM64/AMD64 differences
+- [ ] **Environment Variable Complexity**: Risk of variables not propagating correctly
+- [ ] **Legacy Dependency Availability**: Risk of old packages not available on container OS
+- [ ] **Application Server Setup**: Risk of directory structure or permission issues
+- [ ] **Performance Impact**: Risk of container overhead affecting legacy application
+
+### Enhanced Legacy Containerization Deliverables
+1. **Enhanced Legacy Dependency Inventory**: Architecture-aware dependency analysis
+2. **Multi-Architecture Compatibility Plan**: Strategy for ARM64/AMD64 support
+3. **Environment Variable Strategy**: Robust environment setup for containers
+4. **Implementation Troubleshooting Guide**: Common issues and solutions
+5. **Enhanced Runtime Environment Snapshot**: Architecture and environment aware documentation
+6. **Minimal Change Implementation Plan**: Zero-application-change containerization approach
+
+## Framework Integration
+
+This enhanced containerization guide integrates with:
+- **Enhanced Discovery Phase**: Multi-architecture and environment considerations
+- **Design Phase**: Enhanced container architecture and deployment strategy
+- **Transform Phase**: Implementation with troubleshooting guidance  
+- **Validate Phase**: Multi-architecture and environment validation
 
 ---
 
-*This containerization analysis ensures systematic preparation for modern container-based deployment as part of the application modernization process.*
+**Guide Version**: 2.0 - Enhanced with Multi-Architecture and Environment Robustness  
+**Key Enhancements**: Multi-architecture compatibility, environment variable robustness, implementation troubleshooting, architecture-aware strategies  
+**Recommended For**: All legacy containerization projects, especially those targeting multiple architectures or with complex environment requirements
+
+````

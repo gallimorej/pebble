@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  pebble:
+    image: pebble-blog:latest
+    container_name: pebble-blog
+    ports:
+      - "8080:8080"
+    volumes:
+      # Persistent data storage
+      - pebble-data:/app/data
+      - pebble-logs:/app/logs
+    environment:
+      # Java runtime configuration
+      - JAVA_OPTS=-Xmx1024m -Xms512m -XX:MaxPermSize=256m -Djava.security.egd=file:/dev/./urandom
+      - CATALINA_OPTS=-Dfile.encoding=UTF-8 -Duser.timezone=UTC
+      # Pebble configuration
+      - PEBBLE_DATA_DIR=/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/pebble/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - pebble-network
+
+volumes:
+  pebble-data:
+    driver: local
+  pebble-logs:
+    driver: local
+
+networks:
+  pebble-network:
+    driver: bridge

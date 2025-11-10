@@ -1,0 +1,54 @@
+# Docker ignore file for Pebble application
+# Exclude unnecessary files from Docker build context
+
+# Documentation and development files
+docs/
+*.md
+README*
+LICENSE*
+*.txt
+
+# Git and version control
+.git/
+.gitignore
+.gitattributes
+
+# IDE and editor files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Node modules (if any)
+node_modules/
+
+# Build artifacts we don't want to copy (except target/ which has our WAR)
+build/
+bin/
+out/
+
+# Test outputs
+test-output/
+reports/
+
+# Local configuration
+local.properties
+*.local
+
+# Docker files themselves
+Dockerfile*
+docker-compose*
+.dockerignore
