@@ -450,15 +450,58 @@ monitoring:
       dependency-check.sh --scan /src --format JSON
 ```
 
+## Testing-Only Java 6 Implementation ✨ **NEW**
+
+### For Verification and Testing Purposes
+
+A simplified Java 6 implementation has been created specifically for testing and verification:
+
+#### Files Created:
+- `Dockerfile.java6` - Java 6 container with OpenJDK 6 and Tomcat 7.0.109
+- `docker-compose-java6.yml` - Testing environment configuration  
+- `start-pebble-java6.sh` - Automated setup and startup script
+- `verify-java6.sh` - Java 6 compatibility verification tests
+
+#### Quick Start:
+```bash
+# Build and start Java 6 environment
+./start-pebble-java6.sh
+
+# Verify Java 6 compatibility  
+./verify-java6.sh
+
+# Access application
+open http://localhost:8080/pebble/
+```
+
+#### Technical Implementation:
+- **Base Image**: Ubuntu 14.04 (last to support OpenJDK 6 in repos)
+- **Java Runtime**: OpenJDK 6 from Ubuntu package manager
+- **Application Server**: Tomcat 7.0.109 (consistent with discovery documentation)
+- **Security**: Isolated for testing (not production-ready)
+
+#### Use Cases:
+- ✅ **Verification Testing**: Confirm Java 6 compatibility
+- ✅ **Legacy Behavior Testing**: Validate exact Java 6 runtime behavior  
+- ✅ **Migration Planning**: Understand differences between Java 6 and Java 8
+- ✅ **Compliance Demonstration**: Show Java 6 capability when required
+
+#### Limitations:
+- ⚠️ **Testing Only**: Contains known security vulnerabilities
+- ⚠️ **No Production Use**: Not suitable for external-facing deployment
+- ⚠️ **Limited Support**: Uses deprecated packages and libraries
+
 ## Conclusion
 
 The **Java 8 approach** successfully achieves the containerization goals while providing a pragmatic balance between legacy compatibility and modern operational requirements. 
 
-True Java 6 implementation is **technically possible** but introduces significant **legal, security, and operational complexity** that should only be undertaken with strong business justification and proper risk mitigation strategies.
+For **testing and verification purposes**, a true Java 6 implementation is now available that uses OpenJDK 6 in a controlled environment.
+
+True Java 6 **production implementation** introduces significant **legal, security, and operational complexity** that should only be undertaken with strong business justification and proper risk mitigation strategies.
 
 ---
 
 **Status**: Complete analysis of Java 6 implementation strategies  
-**Recommendation**: Continue with Java 8 runtime approach  
-**Alternative**: Detailed Java 6 implementation available if compliance requires  
+**Recommendation**: Continue with Java 8 runtime approach for production  
+**Testing Alternative**: Java 6 testing environment available for verification  
 **Next Steps**: Document chosen approach in Phase 2 design specifications

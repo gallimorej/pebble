@@ -1,0 +1,77 @@
+# Completely Containerized Java 6 Testing - Modern Build + Legacy Runtime
+# Stage 1: Build with Java 8 (handles modern TLS)
+# Stage 2: Runtime with Java 6 (true compatibility testing)
+
+# Stage 1: Modern Build Environment
+FROM maven:3.8-openjdk-8 AS builder
+
+LABEL stage="build" \
+      purpose="modern-build-for-legacy-runtime"
+
+# Copy source code
+COPY . /app/source
+WORKDIR /app/source
+
+# Build with Java 8 but target Java 6 bytecode (per pom.xml configuration)
+RUN mvn clean package -DskipTests
+
+# Verify the built WAR targets Java 6
+RUN ls -la target/pebble*.war && \
+    echo "WAR file built successfully for Java 6 compatibility"
+
+# Stage 2: Java 6 Runtime Environment  
+FROM ubuntu:14.04 AS runtime
+
+LABEL purpose="testing-only" \
+      java.version="1.6.0" \
+      tomcat.version="7.0.109" \
+      security.risk="high" \
+      usage="internal-testing-only"
+
+# Install Java 6 runtime dependencies and configure environment
+RUN apt-get update && apt-get install -y \
+    openjdk-6-jre \
+    wget \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && update-alternatives --display java
+# Dynamically determine Java path based on architecture
+RUN JAVA_PATH=$(update-alternatives --query java | grep Best | awk '{print $2}') && \
+    JAVA_HOME_PATH=$(dirname $(dirname $JAVA_PATH)) && \
+    echo "export JAVA_HOME=$JAVA_HOME_PATH" >> /etc/environment
+ENV JAVA_HOME=/usr/lib/jvm/java-6-openjdk-arm64
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# Install Tomcat 7.0.109 and configure user
+ENV CATALINA_HOME=/opt/tomcat
+ENV TOMCAT_VERSION=7.0.109
+
+RUN wget https://archive.apache.org/dist/tomcat/tomcat-7/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz \
+    && tar -xzf apache-tomcat-${TOMCAT_VERSION}.tar.gz \
+    && mv apache-tomcat-${TOMCAT_VERSION} ${CATALINA_HOME} \
+    && rm apache-tomcat-${TOMCAT_VERSION}.tar.gz \
+    && groupadd tomcat \
+    && useradd -s /bin/false -g tomcat -d ${CATALINA_HOME} tomcat \
+    && chown -R tomcat:tomcat ${CATALINA_HOME} \
+    && chmod +x ${CATALINA_HOME}/bin/*.sh
+
+# Copy Java 6-compatible WAR from build stage and configure data directory
+COPY --from=builder /app/source/target/pebble*.war ${CATALINA_HOME}/webapps/pebble.war
+RUN mkdir -p /opt/pebble-data && chown tomcat:tomcat /opt/pebble-data
+
+# Runtime environment
+ENV JAVA_OPTS="-Xmx512m -Xms256m"
+ENV CATALINA_OPTS="-Djava.security.egd=file:/dev/./urandom -Dpebble.data=/opt/pebble-data"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
+    CMD curl -f http://localhost:8080/pebble/ || exit 1
+
+# Expose port
+EXPOSE 8080
+
+# Switch to tomcat user and start Tomcat
+USER tomcat
+WORKDIR ${CATALINA_HOME}
+CMD ["bin/catalina.sh", "run"]
