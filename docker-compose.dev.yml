@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  pebble-dev:
+    image: pebble-java6:latest
+    container_name: pebble-dev
+    ports:
+      - "8080:8080"
+      - "8000:8000"  # Debug port
+    volumes:
+      # Live webapp files
+      - ./src/main/webapp:/opt/tomcat/webapps/pebble
+      # Live classes (compile with mvn compile)
+      - ./target/classes:/opt/tomcat/webapps/pebble/WEB-INF/classes
+      # Persistent data
+      - pebble-dev-data:/opt/pebble-data
+    environment:
+      # Enable debug and hot reload
+      - JAVA_OPTS=-Xmx512m -Xms256m -Dpebble.url=http://localhost:8080/ -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000
+      - CATALINA_OPTS=-Djava.security.egd=file:/dev/./urandom -Dpebble.data=/opt/pebble-data
+
+volumes:
+  pebble-dev-data:
+    driver: local
