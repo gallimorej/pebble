@@ -16,7 +16,7 @@ services:
       - pebble-dev-data:/opt/pebble-data
     environment:
       # Enable debug and hot reload
-      - JAVA_OPTS=-Xmx512m -Xms256m -Dpebble.url=http://localhost:8080/ -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000
+      - JAVA_OPTS=-Xmx512m -Xms256m -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000
       - CATALINA_OPTS=-Djava.security.egd=file:/dev/./urandom -Dpebble.data=/opt/pebble-data
 
 volumes:
