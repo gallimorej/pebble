@@ -23,23 +23,6 @@ docker-compose up -d
 **Access your blog**: http://localhost:8080/pebble/  
 **Default login**: username / password
 
-## 🔧 Important Fix: Authentication Redirect Issue
-
-**Issue**: After successful authentication, users were redirected to `/pebble/pebble` causing 404 errors.
-
-**Root Cause**: Double context path in redirect URLs due to interaction between:
-- BlogLookupFilter auto-discovery (includes context path)  
-- PebbleRedirectStrategy sanitization (adds context path again)
-
-**Solution**: Added system property `-Dpebble.url=http://localhost:8080/` to override auto-discovery.
-
-**Implementation**: The fix is implemented in all Docker configurations:
-- `Dockerfile` and `Dockerfile.java6` - ENV CATALINA_OPTS  
-- `docker-compose.yml` and `docker-compose-java6.yml` - environment variables
-- `docker-compose.dev.yml` - development environment with debugging
-
-**Validation**: Tested on both Java 6 and Java 8 environments - redirect now works correctly.
-
 ## What's This About?
 
 This containerization project demonstrates:
@@ -100,7 +83,6 @@ Successfully containerized a complex legacy Java application with:
 - **Tomcat 7 EOL** (3+ years): Latest 7.x version in controlled environment  
 - **Ancient Dependencies**: 15+ libraries isolated from host system
 - **Security Vulnerabilities**: Contained and documented for future updates
-- **Redirect Issue Fixed**: Auto-discovery double context path resolved with system property
 
 ### 🚀 **Modernization Ready**
 This containerization establishes a solid foundation for incremental modernization:

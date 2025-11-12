@@ -1,4 +1,4 @@
-# Application Modernization Framework - v2
+# Application Modernization Framework
 
 ## Overview
 

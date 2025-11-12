@@ -1,5 +1,5 @@
 ````markdown
-# Environment Discovery Guide - v2
+# Environment Discovery Guide
 
 ## 🚨 CRITICAL SAFETY CONSTRAINT
 **READ-ONLY DISCOVERY - NO SOURCE MODIFICATIONS**
