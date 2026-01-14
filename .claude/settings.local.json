@@ -19,7 +19,11 @@
       "Bash(mvn test:*)",
       "Bash(mvn test-compile:*)",
       "Bash(java:*)",
-      "Bash(docker rm:*)"
+      "Bash(docker rm:*)",
+      "Bash(xargs ls:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(docker stop:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
