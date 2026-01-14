@@ -3,15 +3,16 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/beans/spring-beans.xsd
            http://www.springframework.org/schema/security
-           http://www.springframework.org/schema/security/spring-security-3.0.3.xsd">
+           http://www.springframework.org/schema/security/spring-security.xsd">
 
   <!-- ======================== FILTER CHAIN ======================= -->
   <bean id="filterChainProxy" class="org.springframework.security.web.FilterChainProxy">
-    <security:filter-chain-map path-type="ant">
-      <security:filter-chain pattern="/xmlrpc/**" filters="anonymousProcessingFilter"/>
-      <security:filter-chain pattern="/**/*.xml" filters="
+    <constructor-arg>
+      <list>
+        <security:filter-chain pattern="/xmlrpc/**" filters="anonymousProcessingFilter"/>
+        <security:filter-chain pattern="/**/*.xml" filters="
         securityContextPersistenceFilter,
         openIdAuthenticationFilter,
         basicProcessingFilter,
@@ -29,26 +30,27 @@
         privateBlogInvocationInterceptor,
         filterInvocationInterceptor
         "/>
-    </security:filter-chain-map>
+      </list>
+    </constructor-arg>
   </bean>
 
   <!-- ======================== AUTHENTICATION ======================= -->
 
+  <!-- Spring Security 5.x ProviderManager requires constructor args -->
   <bean id="authenticationManager" class="org.springframework.security.authentication.ProviderManager">
-    <property name="providers">
+    <constructor-arg>
       <list>
-        <ref local="daoAuthenticationProvider"/>
-        <ref local="rememberMeAuthenticationProvider"/>
-        <ref local="openIdAuthenticationProvider"/>
+        <ref bean="daoAuthenticationProvider"/>
+        <ref bean="rememberMeAuthenticationProvider"/>
+        <ref bean="openIdAuthenticationProvider"/>
       </list>
-    </property>
+    </constructor-arg>
   </bean>
 
   <bean id="daoAuthenticationProvider"
         class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
     <property name="userDetailsService" ref="pebbleUserDetailsService"/>
     <property name="passwordEncoder" ref="passwordEncoder"/>
-    <property name="saltSource" ref="saltSource"/>
   </bean>
 
   <!-- this is a default implementation of Acegi's UserDetailsService that plugs into the
@@ -64,13 +66,11 @@
   <bean id="pebbleSecurityRealm" class="net.sourceforge.pebble.security.DefaultSecurityRealm">
     <property name="configuration" ref="pebbleConfiguration"/>
     <property name="passwordEncoder" ref="passwordEncoder"/>
-    <property name="saltSource" ref="saltSource"/>
   </bean>
 
-  <bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder"/>
-
-  <bean id="saltSource" class="org.springframework.security.authentication.dao.ReflectionSaltSource">
-    <property name="userPropertyToUse" value="getUsername"/>
+  <!-- Spring Security 5.x uses crypto.password package instead of authentication.encoding -->
+  <bean id="passwordEncoder" class="org.springframework.security.crypto.password.MessageDigestPasswordEncoder">
+    <constructor-arg value="SHA-1"/>
   </bean>
 
   <!-- Automatically receives AuthenticationEvent messages -->
@@ -79,31 +79,35 @@
   <bean id="securityContextPersistenceFilter"
         class="org.springframework.security.web.context.SecurityContextPersistenceFilter"/>
 
+  <!-- Spring Security 5.x RememberMeAuthenticationFilter requires constructor args -->
   <bean id="rememberMeProcessingFilter"
         class="org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter">
-    <property name="rememberMeServices" ref="rememberMeServices"/>
-    <property name="authenticationManager" ref="authenticationManager"/>
+    <constructor-arg ref="authenticationManager"/>
+    <constructor-arg ref="rememberMeServices"/>
   </bean>
 
+  <!-- Spring Security 5.x TokenBasedRememberMeServices requires constructor args -->
   <bean id="rememberMeServices"
         class="org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices">
-    <property name="userDetailsService" ref="pebbleUserDetailsService"/>
-    <property name="key" value="pebble"/>
+    <constructor-arg value="pebble"/>
+    <constructor-arg ref="pebbleUserDetailsService"/>
   </bean>
 
+  <!-- Spring Security 5.x RememberMeAuthenticationProvider requires constructor args -->
   <bean id="rememberMeAuthenticationProvider"
         class="org.springframework.security.authentication.RememberMeAuthenticationProvider">
-    <property name="key" value="pebble"/>
+    <constructor-arg value="pebble"/>
   </bean>
 
-  <bean id="roleVoter" class="org.springframework.security.access.vote.RoleVoter"/>
+  <!-- Spring Security 5.x expression-based access control requires WebExpressionVoter -->
+  <bean id="webExpressionVoter" class="org.springframework.security.web.access.expression.WebExpressionVoter"/>
 
   <!-- ===================== HTTP REQUEST SECURITY ==================== -->
 
+  <!-- Spring Security 5.x AnonymousAuthenticationFilter requires constructor args -->
   <bean id="anonymousProcessingFilter"
         class="org.springframework.security.web.authentication.AnonymousAuthenticationFilter">
-    <property name="key" value="anonymous"/>
-    <property name="userAttribute" value="anonymousUser,ROLE_ANONYMOUS"/>
+    <constructor-arg value="anonymous"/>
   </bean>
 
   <bean id="formProcessingFilter"
@@ -129,29 +133,33 @@
     <property name="redirectStrategy" ref="redirectStrategy"/>
   </bean>
 
+  <!-- Spring Security 5.x LoginUrlAuthenticationEntryPoint requires constructor arg -->
   <bean id="authenticationEntryPoint"
         class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
-    <property name="loginFormUrl" value="/loginPage.action"/>
+    <constructor-arg value="/loginPage.action"/>
     <property name="forceHttps" value="false"/>
   </bean>
 
+  <!-- Spring Security 5.x ExceptionTranslationFilter requires constructor args -->
   <bean id="exceptionTranslationFilter" class="org.springframework.security.web.access.ExceptionTranslationFilter">
-    <property name="authenticationEntryPoint" ref="authenticationEntryPoint"/>
+    <constructor-arg ref="authenticationEntryPoint"/>
   </bean>
 
+  <!-- Spring Security 5.x AffirmativeBased requires constructor args for voters -->
   <bean id="accessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
-    <property name="allowIfAllAbstainDecisions" value="false"/>
-    <property name="decisionVoters">
+    <constructor-arg>
       <list>
-        <ref bean="roleVoter"/>
+        <ref bean="webExpressionVoter"/>
       </list>
-    </property>
+    </constructor-arg>
+    <property name="allowIfAllAbstainDecisions" value="false"/>
   </bean>
 
+  <!-- Spring Security 5.x BasicAuthenticationFilter requires constructor args -->
   <bean id="basicProcessingFilter"
         class="org.springframework.security.web.authentication.www.BasicAuthenticationFilter">
-    <property name="authenticationManager" ref="authenticationManager"/>
-    <property name="authenticationEntryPoint" ref="basicAuthenticationEntryPoint"/>
+    <constructor-arg ref="authenticationManager"/>
+    <constructor-arg ref="basicAuthenticationEntryPoint"/>
   </bean>
 
   <bean id="basicAuthenticationEntryPoint"
@@ -159,8 +167,9 @@
     <property name="realmName" value="Secured newsfeeds"/>
   </bean>
 
+  <!-- Spring Security 5.x ExceptionTranslationFilter requires constructor args -->
   <bean id="basicExceptionTranslationFilter" class="org.springframework.security.web.access.ExceptionTranslationFilter">
-    <property name="authenticationEntryPoint" ref="basicAuthenticationEntryPoint"/>
+    <constructor-arg ref="basicAuthenticationEntryPoint"/>
   </bean>
 
   <!-- ===================== OPEN ID SUPPORT ==================== -->
@@ -195,22 +204,15 @@
     <property name="authenticationManager" ref="authenticationManager"/>
     <property name="accessDecisionManager" ref="accessDecisionManager"/>
     <property name="securityMetadataSource">
-      <security:filter-security-metadata-source lowercase-comparisons="true" path-type="ant">
-        <security:intercept-url pattern="/**/*.secureaction" access="
-          ROLE_BLOG_OWNER,
-          ROLE_BLOG_PUBLISHER,
-          ROLE_BLOG_CONTRIBUTOR,
-          ROLE_BLOG_ADMIN,
-          ROLE_BLOG_READER
-        "/>
-        <security:intercept-url pattern="/**/files/" access="ROLE_BLOG_CONTRIBUTOR"/>
-        <security:intercept-url pattern="/**/images/" access="ROLE_BLOG_CONTRIBUTOR"/>
-        <security:intercept-url pattern="/**/theme/**" access="ROLE_BLOG_OWNER"/>
-        <security:intercept-url pattern="/**/help/**" access="
-          ROLE_BLOG_OWNER,
-          ROLE_BLOG_PUBLISHER,
-          ROLE_BLOG_CONTRIBUTOR
-        "/>
+      <!-- Spring Security 5.x requires SpEL expressions for access attributes -->
+      <security:filter-security-metadata-source use-expressions="true">
+        <security:intercept-url pattern="/**/*.secureaction"
+          access="hasAnyRole('BLOG_OWNER','BLOG_PUBLISHER','BLOG_CONTRIBUTOR','BLOG_ADMIN','BLOG_READER')"/>
+        <security:intercept-url pattern="/**/files/" access="hasRole('BLOG_CONTRIBUTOR')"/>
+        <security:intercept-url pattern="/**/images/" access="hasRole('BLOG_CONTRIBUTOR')"/>
+        <security:intercept-url pattern="/**/theme/**" access="hasRole('BLOG_OWNER')"/>
+        <security:intercept-url pattern="/**/help/**"
+          access="hasAnyRole('BLOG_OWNER','BLOG_PUBLISHER','BLOG_CONTRIBUTOR')"/>
       </security:filter-security-metadata-source>
     </property>
   </bean>
@@ -219,13 +221,14 @@
 
   <bean id="privateBlogRoleVoter" class="net.sourceforge.pebble.security.PrivateBlogVoter"/>
 
+  <!-- Spring Security 5.x AffirmativeBased requires constructor args for voters -->
   <bean id="privateBlogAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
-    <property name="allowIfAllAbstainDecisions" value="false"/>
-    <property name="decisionVoters">
+    <constructor-arg>
       <list>
         <ref bean="privateBlogRoleVoter"/>
       </list>
-    </property>
+    </constructor-arg>
+    <property name="allowIfAllAbstainDecisions" value="false"/>
   </bean>
 
   <bean id="privateBlogInvocationInterceptor" class="net.sourceforge.pebble.security.PrivateBlogSecurityInterceptor">

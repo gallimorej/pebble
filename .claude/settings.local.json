@@ -18,7 +18,8 @@
       "Bash(tee:*)",
       "Bash(mvn test:*)",
       "Bash(mvn test-compile:*)",
-      "Bash(java:*)"
+      "Bash(java:*)",
+      "Bash(docker rm:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
