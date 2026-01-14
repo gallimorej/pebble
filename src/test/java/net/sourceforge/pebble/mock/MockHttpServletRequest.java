@@ -36,6 +36,7 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -187,6 +188,10 @@ public class MockHttpServletRequest implements HttpServletRequest {
     return session;
   }
 
+  public String changeSessionId() {
+    return session.getId();
+  }
+
   public boolean isRequestedSessionIdValid() {
     return false;
   }
@@ -220,6 +225,10 @@ public class MockHttpServletRequest implements HttpServletRequest {
 
   public int getContentLength() {
     return 0;
+  }
+
+  public long getContentLengthLong() {
+    return 0L;
   }
 
   public String getContentType() {
@@ -390,6 +399,11 @@ public class MockHttpServletRequest implements HttpServletRequest {
     @Override
     public DispatcherType getDispatcherType() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) {
+        throw new UnsupportedOperationException("HTTP protocol upgrade not supported in mock");
     }
 
 

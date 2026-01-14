@@ -36,11 +36,10 @@ import net.sourceforge.pebble.Constants;
 import net.sourceforge.pebble.PebbleContext;
 import net.sourceforge.pebble.domain.SingleBlogTestCase;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.security.authentication.dao.ReflectionSaltSource;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
-import org.springframework.security.authentication.encoding.PlaintextPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.*;
 
@@ -53,7 +52,6 @@ public class DefaultSecurityRealmTest extends SingleBlogTestCase {
 
   private DefaultSecurityRealm realm;
   private PasswordEncoder passwordEncoder;
-  private ReflectionSaltSource saltSource;
 
   protected void setUp() throws Exception {
     super.setUp();
@@ -61,11 +59,8 @@ public class DefaultSecurityRealmTest extends SingleBlogTestCase {
     realm = new DefaultSecurityRealm();
     realm.setConfiguration(PebbleContext.getInstance().getConfiguration());
 
-    passwordEncoder = new PlaintextPasswordEncoder();
+    passwordEncoder = NoOpPasswordEncoder.getInstance();
     realm.setPasswordEncoder(passwordEncoder);
-    saltSource = new ReflectionSaltSource();
-    saltSource.setUserPropertyToUse("getUsername");
-    realm.setSaltSource(saltSource);
 
     realm.onApplicationEvent(new ContextRefreshedEvent(testApplicationContext));
   }
@@ -78,7 +73,6 @@ public class DefaultSecurityRealmTest extends SingleBlogTestCase {
 
   public void testConfigured() {
     assertSame(passwordEncoder, realm.getPasswordEncoder());
-    assertSame(saltSource, realm.getSaltSource());
   }
 
   public void testGetUser() throws Exception {
@@ -90,7 +84,7 @@ public class DefaultSecurityRealmTest extends SingleBlogTestCase {
 
     assertNotNull(user);
     assertEquals("testuser", user.getUsername());
-    assertEquals("password{testuser}", user.getPassword());
+    assertEquals("password", user.getPassword());
     assertEquals("name", user.getName());
     assertEquals("emailAddress", user.getEmailAddress());
     assertEquals("website", user.getWebsite());
@@ -99,8 +93,8 @@ public class DefaultSecurityRealmTest extends SingleBlogTestCase {
 
     Collection<GrantedAuthority> authorities = user.getAuthorities();
     assertEquals(2, authorities.size());
-    assertTrue(authorities.contains(new GrantedAuthorityImpl(Constants.BLOG_OWNER_ROLE)));
-    assertTrue(authorities.contains(new GrantedAuthorityImpl(Constants.BLOG_READER_ROLE)));
+    assertTrue(authorities.contains(new SimpleGrantedAuthority(Constants.BLOG_OWNER_ROLE)));
+    assertTrue(authorities.contains(new SimpleGrantedAuthority(Constants.BLOG_READER_ROLE)));
   }
 
   public void testGetUserWhenUserDoesntExist() throws Exception {

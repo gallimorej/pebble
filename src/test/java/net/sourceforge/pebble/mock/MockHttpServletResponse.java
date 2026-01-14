@@ -159,6 +159,9 @@ public class MockHttpServletResponse implements HttpServletResponse {
   public void setContentLength(int i) {
   }
 
+  public void setContentLengthLong(long len) {
+  }
+
   public void setContentType(String s) {
     this.contentType = s;
   }

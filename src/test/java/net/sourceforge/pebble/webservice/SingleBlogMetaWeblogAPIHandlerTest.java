@@ -35,7 +35,7 @@ import net.sourceforge.pebble.Constants;
 import net.sourceforge.pebble.domain.*;
 import net.sourceforge.pebble.mock.MockAuthenticationManager;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.apache.xmlrpc.XmlRpcException;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -58,7 +58,7 @@ public class SingleBlogMetaWeblogAPIHandlerTest extends SingleBlogTestCase {
   protected void setUp() throws Exception {
     super.setUp();
 
-    authenticationManager = new MockAuthenticationManager(true, new GrantedAuthority[] {new GrantedAuthorityImpl(Constants.BLOG_CONTRIBUTOR_ROLE)});
+    authenticationManager = new MockAuthenticationManager(true, new GrantedAuthority[] {new SimpleGrantedAuthority(Constants.BLOG_CONTRIBUTOR_ROLE)});
     handler.setAuthenticationManager(authenticationManager);
     blog.setProperty(Blog.BLOG_CONTRIBUTORS_KEY, "username");
   }

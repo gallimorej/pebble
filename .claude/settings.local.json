@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn clean compile:*)",
+      "Bash(MAVEN_OPTS=\"--add-opens java.base/java.lang=ALL-UNNAMED\" mvn clean compile:*)",
+      "Bash(mvn clean test:*)",
+      "Bash(mvn clean package:*)",
+      "Bash(docker build:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(brew list:*)",
+      "Bash(docker run:*)",
+      "Bash(curl:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(docker exec:*)",
+      "Bash(tee:*)",
+      "Bash(mvn test:*)",
+      "Bash(mvn test-compile:*)",
+      "Bash(java:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "claude-flow"
+  ]
+}

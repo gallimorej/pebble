@@ -38,6 +38,7 @@ import net.sourceforge.pebble.search.SearchResults;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -97,6 +98,7 @@ public class SearchIndex {
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         IndexWriter writer = new IndexWriter(dir, config);
+        writer.commit();
         writer.close();
         dir.close();
       } catch (Exception e) {
@@ -122,6 +124,7 @@ public class SearchIndex {
           index(blogEntry, writer);
         }
 
+        writer.commit();
         writer.close();
         dir.close();
       } catch (Exception e) {
@@ -147,6 +150,7 @@ public class SearchIndex {
           index(staticPage, writer);
         }
 
+        writer.commit();
         writer.close();
         dir.close();
       } catch (Exception e) {
@@ -175,10 +179,12 @@ public class SearchIndex {
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
         IndexWriter writer = new IndexWriter(dir, config);
         index(blogEntry, writer);
+        writer.commit();
         writer.close();
         dir.close();
       }
     } catch (Exception e) {
+      e.printStackTrace();
       log.error(e.getMessage(), e);
     }
   }
@@ -203,6 +209,7 @@ public class SearchIndex {
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
         IndexWriter writer = new IndexWriter(dir, config);
         index(staticPage, writer);
+        writer.commit();
         writer.close();
         dir.close();
       }
@@ -212,14 +219,52 @@ public class SearchIndex {
   }
 
   /**
+   * Escapes special characters in a query string while preserving field:value syntax.
+   *
+   * @param queryString the query string to escape
+   * @return the escaped query string
+   */
+  private String escapeQueryString(String queryString) {
+    // Split on field separator but preserve it
+    int colonIndex = queryString.indexOf(':');
+    if (colonIndex > 0 && colonIndex < queryString.length() - 1) {
+      String field = queryString.substring(0, colonIndex);
+      String value = queryString.substring(colonIndex + 1);
+      // Escape the value part only
+      value = QueryParser.escape(value);
+      return field + ":" + value;
+    }
+    // No field:value syntax, escape the whole string
+    return QueryParser.escape(queryString);
+  }
+
+  /**
    * Gets the Analyzer implementation to use.
    *
    * @return  an Analyzer instance
    * @throws Exception
    */
   private Analyzer getAnalyzer() throws Exception {
-    Class c = Class.forName(blog.getLuceneAnalyzer());
-    return (Analyzer)c.newInstance();
+    String analyzerClassName = blog.getLuceneAnalyzer();
+    try {
+      // Try Lucene 9.x package first (e.g., org.apache.lucene.analysis.core.SimpleAnalyzer)
+      if (analyzerClassName.contains(".analysis.") && !analyzerClassName.contains(".core.")) {
+        String lucene9ClassName = analyzerClassName.replace(".analysis.", ".analysis.core.");
+        try {
+          Class c = Class.forName(lucene9ClassName);
+          return (Analyzer)c.newInstance();
+        } catch (ClassNotFoundException cnfe) {
+          // Fall through to try original name
+        }
+      }
+
+      Class c = Class.forName(analyzerClassName);
+      return (Analyzer)c.newInstance();
+    } catch (ClassNotFoundException cnfe) {
+      // Fall back to StandardAnalyzer if configured analyzer not found
+      log.warn("Analyzer " + analyzerClassName + " not found, using StandardAnalyzer");
+      return new StandardAnalyzer();
+    }
   }
 
   /**
@@ -243,6 +288,7 @@ public class SearchIndex {
         Term term = new Term("id", blogEntry.getId());
         long deleted = writer.deleteDocuments(term);
         log.debug("Deleted " + deleted + " document(s) from the index");
+        writer.commit();
         writer.close();
         dir.close();
       }
@@ -272,6 +318,7 @@ public class SearchIndex {
         Term term = new Term("id", staticPage.getId());
         long deleted = writer.deleteDocuments(term);
         log.debug("Deleted " + deleted + " document(s) from the index");
+        writer.commit();
         writer.close();
         dir.close();
       }
@@ -294,6 +341,10 @@ public class SearchIndex {
     try {
       log.debug("Indexing " + blogEntry.getTitle());
       Document document = new Document();
+      if (blogEntry.getId() == null) {
+        log.error("BlogEntry ID is null, cannot index");
+        return;
+      }
       document.add(new StringField("id", blogEntry.getId(), Field.Store.YES));
       if (blogEntry.getTitle() != null) {
         document.add(new TextField("title", blogEntry.getTitle(), Field.Store.YES));
@@ -305,8 +356,12 @@ public class SearchIndex {
       } else {
         document.add(new TextField("subtitle", "", Field.Store.YES));
       }
-      document.add(new StringField("permalink", blogEntry.getPermalink(), Field.Store.YES));
-      document.add(new StoredField("date", blogEntry.getDate().getTime()));
+      if (blogEntry.getPermalink() != null) {
+        document.add(new StringField("permalink", blogEntry.getPermalink(), Field.Store.YES));
+      }
+      if (blogEntry.getDate() != null) {
+        document.add(new StoredField("date", blogEntry.getDate().getTime()));
+      }
       if (blogEntry.getBody() != null) {
         document.add(new TextField("body", blogEntry.getBody(), Field.Store.NO));
       } else {
@@ -360,6 +415,7 @@ public class SearchIndex {
 
       writer.addDocument(document);
     } catch (Exception e) {
+      e.printStackTrace();
       log.error(e.getMessage(), e);
     }
   }
@@ -379,8 +435,12 @@ public class SearchIndex {
       } else {
         document.add(new TextField("title", "", Field.Store.YES));
       }
-      document.add(new StringField("permalink", staticPage.getPermalink(), Field.Store.YES));
-      document.add(new StoredField("date", staticPage.getDate().getTime()));
+      if (staticPage.getPermalink() != null) {
+        document.add(new StringField("permalink", staticPage.getPermalink(), Field.Store.YES));
+      }
+      if (staticPage.getDate() != null) {
+        document.add(new StoredField("date", staticPage.getDate().getTime()));
+      }
       if (staticPage.getBody() != null) {
         document.add(new TextField("body", staticPage.getBody(), Field.Store.NO));
       } else {
@@ -432,12 +492,25 @@ public class SearchIndex {
         reader = DirectoryReader.open(dir);
         IndexSearcher searcher = new IndexSearcher(reader);
         QueryParser parser = new QueryParser("blogEntry", getAnalyzer());
-        Query query = parser.parse(queryString);
+
+        // Parse the query, escaping if needed
+        Query query = null;
+        try {
+          query = parser.parse(queryString);
+        } catch (ParseException pe) {
+          // If parsing fails, try escaping special characters and parse again
+          String escapedQuery = escapeQueryString(queryString);
+          query = parser.parse(escapedQuery);
+        }
         TopDocs topDocs = searcher.search(query, 1000); // Max 1000 results
 
         for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
           Document doc = searcher.doc(scoreDoc.doc);
-          long dateMillis = doc.getField("date").numericValue().longValue();
+          Date date = null;
+          if (doc.getField("date") != null && doc.getField("date").numericValue() != null) {
+            long dateMillis = doc.getField("date").numericValue().longValue();
+            date = new Date(dateMillis);
+          }
           SearchHit result = new SearchHit(
               blog,
               doc.get("id"),
@@ -445,10 +518,12 @@ public class SearchIndex {
               doc.get("title"),
               doc.get("subtitle"),
               doc.get("truncatedBody"),
-              new Date(dateMillis),
+              date,
               scoreDoc.score);
           searchResults.add(result);
         }
+      } catch (org.apache.lucene.index.IndexNotFoundException infe) {
+        // Index doesn't exist yet - return empty results
       } catch (ParseException pe) {
         pe.printStackTrace();
         searchResults.setMessage("Sorry, but there was an error. Please try another search");

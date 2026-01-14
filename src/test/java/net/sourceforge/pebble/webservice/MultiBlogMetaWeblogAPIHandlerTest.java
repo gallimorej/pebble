@@ -36,7 +36,7 @@ import net.sourceforge.pebble.domain.*;
 import net.sourceforge.pebble.mock.MockAuthenticationManager;
 import org.apache.xmlrpc.XmlRpcException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Hashtable;
 import java.util.Vector;
@@ -53,7 +53,7 @@ public class MultiBlogMetaWeblogAPIHandlerTest extends MultiBlogTestCase {
   protected void setUp() throws Exception {
     super.setUp();
 
-    handler.setAuthenticationManager(new net.sourceforge.pebble.mock.MockAuthenticationManager(true, new GrantedAuthority[] {new GrantedAuthorityImpl(Constants.BLOG_CONTRIBUTOR_ROLE)}));
+    handler.setAuthenticationManager(new net.sourceforge.pebble.mock.MockAuthenticationManager(true, new GrantedAuthority[] {new SimpleGrantedAuthority(Constants.BLOG_CONTRIBUTOR_ROLE)}));
     blog1.setProperty(Blog.BLOG_CONTRIBUTORS_KEY, "username");
   }
 
