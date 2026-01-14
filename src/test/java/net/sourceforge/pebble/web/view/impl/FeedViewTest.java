@@ -44,8 +44,8 @@ import net.sourceforge.pebble.domain.SingleBlogTestCase;
 import net.sourceforge.pebble.mock.MockHttpServletRequest;
 import net.sourceforge.pebble.mock.MockHttpServletResponse;
 import net.sourceforge.pebble.web.model.Model;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.functors.InstanceofPredicate;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.functors.InstanceofPredicate;
 
 import java.io.PrintWriter;
 import java.util.Collections;

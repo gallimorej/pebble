@@ -41,20 +41,18 @@ import java.util.Comparator;
  *
  * @author    Simon Brown
  */
-public class PageBasedContentByTitleComparator implements Comparator {
+public class PageBasedContentByTitleComparator implements Comparator<PageBasedContent> {
 
   /**
    * Compares two objects.
    *
-   * @param o1  object 1
-   * @param o2  object 2
+   * @param c1  page-based content 1
+   * @param c2  page-based content 2
    * @return  -n, 0 or +n if the title of the first blog entry is less than,
    *          the same as or greater than the second, respectively
    */
-  public int compare(Object o1, Object o2) {
-    PageBasedContent c1 = (PageBasedContent)o1;
-    PageBasedContent c2 = (PageBasedContent)o2;
-
+  @Override
+  public int compare(PageBasedContent c1, PageBasedContent c2) {
     return c1.getTitle().compareToIgnoreCase(c2.getTitle());
   }
 

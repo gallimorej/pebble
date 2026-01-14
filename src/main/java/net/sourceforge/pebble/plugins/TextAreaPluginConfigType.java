@@ -31,7 +31,7 @@
  */
 package net.sourceforge.pebble.plugins;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import javax.servlet.jsp.JspWriter;
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class TextAreaPluginConfigType implements PluginConfigType {
     writer.print(pluginConfig.getKey());
     writer.print("\">");
     if (value != null) {
-      writer.print(StringEscapeUtils.escapeHtml(value));
+      writer.print(StringEscapeUtils.escapeHtml4(value));
     }
     writer.print("</textarea>");
   }

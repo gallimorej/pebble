@@ -425,7 +425,7 @@ public class BlogEntry extends PageBasedContent {
    * Gets the link that blogs can send TrackBacks too.
     */
   public String getTrackBackLink() {
-    StringBuffer link = new StringBuffer();
+    StringBuilder link = new StringBuilder();
     link.append(getBlog().getUrl());
     link.append("addTrackBack.action?entry=");
     link.append(getId());
@@ -771,7 +771,7 @@ public class BlogEntry extends PageBasedContent {
    * @return <code>true</code> if this object is the same as the obj
    *         argument; <code>false</code> otherwise.
    * @see #hashCode()
-   * @see java.util.Hashtable
+   * @see java.util.HashMap
    */
   public boolean equals(Object o) {
     if (this == o) {

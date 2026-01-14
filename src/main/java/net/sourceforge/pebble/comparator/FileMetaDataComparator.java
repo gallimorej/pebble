@@ -41,22 +41,20 @@ import java.util.Comparator;
  *
  * @author    Simon Brown
  */
-public class FileMetaDataComparator implements Comparator {
+public class FileMetaDataComparator implements Comparator<FileMetaData> {
 
   /**
    * Compares two objects.
    *
-   * @param o1  object 1
-   * @param o2  object 2
+   * @param f1  file metadata 1
+   * @param f2  file metadata 2
    * @return  -n, 0 or +n if the count of the second visited URL is less than,
    *          the same as or greater than the first, respectively. However, if
    *          the counts are the same, then -n, 0 or +n is returned if the name
    *          of the first is less than, the same as or greater than the second
    */
-  public int compare(Object o1, Object o2) {
-    FileMetaData f1 = (FileMetaData)o1;
-    FileMetaData f2 = (FileMetaData)o2;
-
+  @Override
+  public int compare(FileMetaData f1, FileMetaData f2) {
     return f1.getName().compareTo(f2.getName());
   }
 

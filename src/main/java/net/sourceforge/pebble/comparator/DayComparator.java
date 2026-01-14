@@ -41,21 +41,19 @@ import java.util.Comparator;
  *
  * @author    Simon Brown
  */
-public class DayComparator implements Comparator {
+public class DayComparator implements Comparator<Day> {
 
   /**
    * Compares two objects.
    *
-   * @param o1  object 1
-   * @param o2  object 2
+   * @param d1  day 1
+   * @param d2  day 2
    * @return  -n, 0 or +n if the date represented by the second day is less than,
    *          the same as or greater than the first, respectively
    */
-  public int compare(Object o1, Object o2) {
-    Day b1 = (Day)o1;
-    Day b2 = (Day)o2;
-
-    return b2.getDate().compareTo(b1.getDate());
+  @Override
+  public int compare(Day d1, Day d2) {
+    return d2.getDate().compareTo(d1.getDate());
   }
 
 }

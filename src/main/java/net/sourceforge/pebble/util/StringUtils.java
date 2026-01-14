@@ -354,7 +354,7 @@ public final class StringUtils {
       return null;
     }
 
-    StringBuffer buf = new StringBuffer(s.length());
+    StringBuilder buf = new StringBuilder(s.length());
 
     // loop through every character and replace if necessary
     int length = s.length();
@@ -424,7 +424,7 @@ public final class StringUtils {
     s = replace(s, CLOSING_A_TAG_PATTERN, "</a>");
     Matcher m = OPENING_A_TAG_PATTERN.matcher(s);
     // Use a single buffer for efficiency
-    StringBuffer buffer = new StringBuffer();
+    StringBuilder buffer = new StringBuilder();
     // The position in the original string that we are up to
     int position = 0;
     while (m.find()) {
@@ -479,7 +479,7 @@ public final class StringUtils {
       return null;
     }
 
-    StringBuffer buf = new StringBuffer(s.length());
+    StringBuilder buf = new StringBuilder(s.length());
 
     // loop through every character and replace if necessary
     int length = s.length();
@@ -552,7 +552,7 @@ public final class StringUtils {
     if (content == null) {
       return "";
     } else {
-      StringBuffer buf = new StringBuffer();
+      StringBuilder buf = new StringBuilder();
 
       String words[] = content.split("\\s");
       for (int i = 0; i < words.length; i++) {
@@ -589,14 +589,9 @@ public final class StringUtils {
 
 
   public static String unescapeHTMLEntities(String source) {
-     Iterator<String> it = htmlEntities.keySet().iterator(); 
-	 
-	 while(it.hasNext()) { 
-		 
-		 String key = it.next(); 
-		 String val = htmlEntities.get(key); 
-		 source = source.replaceAll(key, val);
-	 } 
+     for (Map.Entry<String, String> entry : htmlEntities.entrySet()) {
+       source = source.replaceAll(entry.getKey(), entry.getValue());
+     }
      return source;
   }
 

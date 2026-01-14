@@ -21,8 +21,9 @@ RUN apt-get update && apt-get install -y \
 # Note: Java 6 is no longer available in modern repositories
 RUN apt-get update && apt-get install -y openjdk-8-jdk && rm -rf /var/lib/apt/lists/*
 
-# Set JAVA_HOME
-ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+# Set JAVA_HOME (auto-detect Java installation)
+RUN echo "export JAVA_HOME=\$(dirname \$(dirname \$(readlink -f \$(which java))))" >> /etc/profile
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
 ENV PATH=$PATH:$JAVA_HOME/bin
 
 # Create application user for security
@@ -34,10 +35,10 @@ RUN chown -R pebble:pebble /app
 
 # Download and install Tomcat 7.0.109 (latest 7.x version)
 RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.109/bin/apache-tomcat-7.0.109.tar.gz \
-    && tar -xzf apache-tomcat-7.0.109.tar.gz -C /opt/ \
-    && mv /opt/apache-tomcat-7.0.109 /opt/tomcat \
+    && tar -xzf apache-tomcat-7.0.109.tar.gz -C /opt/tomcat --strip-components=1 \
     && rm apache-tomcat-7.0.109.tar.gz \
-    && chown -R pebble:pebble /opt/tomcat
+    && chown -R pebble:pebble /opt/tomcat \
+    && chmod +x /opt/tomcat/bin/*.sh
 
 # Set environment variables
 ENV CATALINA_HOME=/opt/tomcat
@@ -68,4 +69,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8080/pebble/ping || exit 1
 
 # Start Tomcat
-CMD ["sh", "/opt/tomcat/bin/catalina.sh", "run"]
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]

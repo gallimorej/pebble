@@ -31,7 +31,7 @@
  */
 package net.sourceforge.pebble.plugins;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import javax.servlet.jsp.JspWriter;
 import java.io.IOException;
@@ -45,11 +45,11 @@ public class PasswordPluginConfigType implements PluginConfigType {
 
   public void render(JspWriter writer, PluginConfig pluginConfig, String value) throws IOException {
     writer.print("<input type=\"password\" name=\"");
-    writer.print(PLUGIN_PROPERTY_NAME_PREFIX);    
+    writer.print(PLUGIN_PROPERTY_NAME_PREFIX);
     writer.print(pluginConfig.getKey());
     writer.print("\" value=\"");
     if (value != null) {
-      writer.print(StringEscapeUtils.escapeHtml(value));
+      writer.print(StringEscapeUtils.escapeHtml4(value));
     }
     writer.print("\"/>");
   }

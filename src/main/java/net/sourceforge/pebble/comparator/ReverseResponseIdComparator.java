@@ -39,20 +39,18 @@ import java.util.Comparator;
  *
  * @author    Simon Brown
  */
-public class ReverseResponseIdComparator implements Comparator {
+public class ReverseResponseIdComparator implements Comparator<String> {
 
   /**
    * Compares two objects.
    *
-   * @param o1  object 1
-   * @param o2  object 2
+   * @param responseId1  response id 1
+   * @param responseId2  response id 2
    * @return  -n, 0 or +n if the date represented by the second blog entry is less than,
    *          the same as or greater than the first, respectively
    */
-  public int compare(Object o1, Object o2) {
-    String responseId1 = (String)o1;
-    String responseId2 = (String)o2;
-
+  @Override
+  public int compare(String responseId1, String responseId2) {
     int start = responseId1.lastIndexOf("/");
     return responseId2.substring(start).compareTo(responseId1.substring(start));
   }

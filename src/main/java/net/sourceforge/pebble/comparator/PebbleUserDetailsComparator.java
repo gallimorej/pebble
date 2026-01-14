@@ -41,22 +41,20 @@ import java.util.Comparator;
  *
  * @author    Simon Brown
  */
-public class PebbleUserDetailsComparator implements Comparator {
+public class PebbleUserDetailsComparator implements Comparator<PebbleUserDetails> {
 
   /**
    * Compares two objects.
    *
-   * @param o1  object 1
-   * @param o2  object 2
+   * @param pud1  user details 1
+   * @param pud2  user details 2
    * @return  -n, 0 or +n if the count of the second visited URL is less than,
    *          the same as or greater than the first, respectively. However, if
    *          the counts are the same, then -n, 0 or +n is returned if the name
    *          of the first is less than, the same as or greater than the second
    */
-  public int compare(Object o1, Object o2) {
-    PebbleUserDetails pud1 = (PebbleUserDetails)o1;
-    PebbleUserDetails pud2 = (PebbleUserDetails)o2;
-
+  @Override
+  public int compare(PebbleUserDetails pud1, PebbleUserDetails pud2) {
     return pud1.getName().compareTo(pud2.getName());
   }
 

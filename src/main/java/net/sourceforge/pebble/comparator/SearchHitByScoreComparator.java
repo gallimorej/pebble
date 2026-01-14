@@ -41,20 +41,18 @@ import java.util.Comparator;
  *
  * @author    Simon Brown
  */
-public class SearchHitByScoreComparator implements Comparator {
+public class SearchHitByScoreComparator implements Comparator<SearchHit> {
 
   /**
    * Compares two objects.
    *
-   * @param o1  object 1
-   * @param o2  object 2
+   * @param h1  search hit 1
+   * @param h2  search hit 2
    * @return  -n, 0 or +n if the score represented by the second hit is less than,
    *          the same as or greater than the first, respectively
    */
-  public int compare(Object o1, Object o2) {
-    SearchHit h1 = (SearchHit)o1;
-    SearchHit h2 = (SearchHit)o2;
-
+  @Override
+  public int compare(SearchHit h1, SearchHit h2) {
     int comparison = Float.compare(h2.getScore(), h1.getScore());
     if (comparison == 0) {
       return h2.getDate().compareTo(h1.getDate());

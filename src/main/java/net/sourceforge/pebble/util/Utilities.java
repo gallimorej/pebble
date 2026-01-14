@@ -77,15 +77,11 @@ public class Utilities {
    * @param blog    a Blog instance
    */
   public static void buildIpAddressLists(Blog blog) {
-    Iterator blogEntries = blog.getBlogEntries().iterator();
     IpAddressListener ipAddressListener = new IpAddressListener();
 
-    while (blogEntries.hasNext()) {
-      BlogEntry blogEntry = (BlogEntry)blogEntries.next();
+    for (BlogEntry blogEntry : blog.getBlogEntries()) {
       log.info("Processing " + blogEntry.getTitle() + " (" + blogEntry.getDate() + ")");
-      Iterator comments = blogEntry.getComments().iterator();
-      while (comments.hasNext()) {
-        Comment comment = (Comment)comments.next();
+      for (Comment comment : blogEntry.getComments()) {
         if (comment.isApproved()) {
           CommentEvent event = new CommentEvent(comment, CommentEvent.COMMENT_APPROVED);
           ipAddressListener.commentApproved(event);
@@ -95,9 +91,7 @@ public class Utilities {
         }
       }
 
-      Iterator trackbacks = blogEntry.getTrackBacks().iterator();
-      while (trackbacks.hasNext()) {
-        TrackBack trackback = (TrackBack)trackbacks.next();
+      for (TrackBack trackback : blogEntry.getTrackBacks()) {
         if (trackback.isApproved()) {
           TrackBackEvent event = new TrackBackEvent(trackback, TrackBackEvent.TRACKBACK_APPROVED);
           ipAddressListener.trackBackApproved(event);
@@ -121,22 +115,16 @@ public class Utilities {
    * @param blog    a Blog instance
    */
   public static void fixHtmlInResponses(Blog blog) {
-    Iterator blogEntries = blog.getBlogEntries().iterator();
-    while (blogEntries.hasNext()) {
-      BlogEntry blogEntry = (BlogEntry)blogEntries.next();
+    for (BlogEntry blogEntry : blog.getBlogEntries()) {
       log.info("Processing " + blogEntry.getTitle() + " (" + blogEntry.getDate() + ")");
-      Iterator comments = blogEntry.getComments().iterator();
-      while (comments.hasNext()) {
-        Comment comment = (Comment)comments.next();
+      for (Comment comment : blogEntry.getComments()) {
         if (comment.getBody() != null) {
           comment.setBody(comment.getBody().replaceAll("&amp;", "&"));
           comment.setBody(comment.getBody().replaceAll("&lt;", "<"));
           comment.setBody(comment.getBody().replaceAll("&gt;", ">"));
         }
       }
-      Iterator trackbacks = blogEntry.getTrackBacks().iterator();
-      while (trackbacks.hasNext()) {
-        TrackBack trackback = (TrackBack)trackbacks.next();
+      for (TrackBack trackback : blogEntry.getTrackBacks()) {
         if (trackback.getExcerpt() != null) {
           trackback.setExcerpt(trackback.getExcerpt().replaceAll("&amp;", "&"));
           trackback.setExcerpt(trackback.getExcerpt().replaceAll("&lt;", "<"));
@@ -159,14 +147,11 @@ public class Utilities {
    */
   public static void convertCategories(Blog blog) {
     Properties categories = new Properties();
-    try {
-      FileInputStream in = new FileInputStream(new File(blog.getRoot(), "blog.categories"));
+    try (FileInputStream in = new FileInputStream(new File(blog.getRoot(), "blog.categories"))) {
       categories.load(in);
-      in.close();
 
-      Iterator it = categories.keySet().iterator();
-      while (it.hasNext()) {
-        String id = (String)it.next();
+      for (Object keyObj : categories.keySet()) {
+        String id = (String) keyObj;
         String name = categories.getProperty(id);
         Category category;
 
@@ -192,9 +177,7 @@ public class Utilities {
    * @param blog    a Blog instance
    */
   public static void moveBlogEntriesFromCategory(Blog blog, Category from, Category to) {
-    Iterator blogEntries = blog.getBlogEntries().iterator();
-    while (blogEntries.hasNext()) {
-      BlogEntry blogEntry = (BlogEntry)blogEntries.next();
+    for (BlogEntry blogEntry : blog.getBlogEntries()) {
       log.info("Processing " + blogEntry.getTitle() + " (" + blogEntry.getDate() + ")");
 
       Collection categories = blogEntry.getCategories();

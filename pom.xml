@@ -10,6 +10,25 @@
     <description>A lightweight, open source, Java EE blogging tool</description>
     <url>http://pebble.sourceforge.net</url>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.release>8</maven.compiler.release>
+
+        <!-- Plugin versions -->
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-war-plugin.version>3.4.0</maven-war-plugin.version>
+        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+        <maven-site-plugin.version>3.12.1</maven-site-plugin.version>
+        <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
+        <maven-scm-plugin.version>2.0.1</maven-scm-plugin.version>
+        <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
+        <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
+        <cobertura-maven-plugin.version>2.7</cobertura-maven-plugin.version>
+    </properties>
+
     <pluginRepositories>
         <!-- This is for the jaxb-maven-plugin -->
         <pluginRepository>
@@ -38,14 +57,14 @@
            <version>2.0.10</version>
        </dependency>
        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.2</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.4</version>
         </dependency>
         <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.6</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.14.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat</groupId>
@@ -164,7 +183,7 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.3.3</version>
+            <version>1.5</version>
         </dependency>
         <dependency>
             <groupId>xmlrpc</groupId>
@@ -279,7 +298,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>1.4</version>
+            <version>2.15.1</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -306,17 +325,20 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <encoding>UTF-8</encoding>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <release>${maven.compiler.release}</release>
+                    <showDeprecation>true</showDeprecation>
+                    <showWarnings>true</showWarnings>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>${maven-source-plugin.version}</version>
                 <executions>
                     <execution>
                         <goals>
@@ -328,35 +350,48 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>${maven-war-plugin.version}</version>
                 <configuration>
                     <archiveClasses>true</archiveClasses>
                     <attachClasses>true</attachClasses>
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.sun.tools.xjc.maven2</groupId>
-                <artifactId>maven-jaxb-plugin</artifactId>
-                <version>1.1.1</version>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+                <version>0.15.3</version>
                 <executions>
                     <execution>
-                        <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
+                    <schemaDirectory>${basedir}/src/main/resources</schemaDirectory>
+                    <schemaIncludes>
+                        <include>pebble.xsd</include>
+                    </schemaIncludes>
                     <generatePackage>net.sourceforge.pebble.dao.file</generatePackage>
-                    <includeSchemas>
-                        <includeSchema>pebble.xsd</includeSchema>
-                    </includeSchemas>
+                    <generateDirectory>${project.build.directory}/generated-sources/xjc</generateDirectory>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.glassfish.jaxb</groupId>
+                        <artifactId>jaxb-runtime</artifactId>
+                        <version>2.3.9</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.glassfish.jaxb</groupId>
+                        <artifactId>jaxb-xjc</artifactId>
+                        <version>2.3.9</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
-                <version>2.1</version>
+                <version>${maven-site-plugin.version}</version>
                 <configuration>
                     <templateFile>${basedir}/src/site/pebble-site.vm</templateFile>
                 </configuration>
@@ -364,12 +399,14 @@
                     <dependency>
                         <groupId>org.apache.maven.doxia</groupId>
                         <artifactId>doxia-module-xhtml</artifactId>
-                        <version>1.1.2</version>
+                        <version>1.12.0</version>
                     </dependency>
                 </dependencies>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
+                <version>${maven-antrun-plugin.version}</version>
                 <executions>
                     <execution>
                         <phase>process-resources</phase>
@@ -377,19 +414,21 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
-                            <tasks>
+                            <target>
                                 <copy todir="${basedir}/target/${project.artifactId}-${project.version}">
                                     <fileset dir="${basedir}">
                                         <include name="*.txt" />
                                     </fileset>
                                 </copy>
-                            </tasks>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
+                <version>${maven-release-plugin.version}</version>
                 <configuration>
                     <goals>install site-deploy</goals>
                     <releaseProfiles>release</releaseProfiles>
@@ -398,7 +437,15 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-scm-plugin</artifactId>
-                <version>1.1</version>
+                <version>${maven-scm-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -408,17 +455,19 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-antrun-plugin</artifactId>
+                        <version>${maven-antrun-plugin.version}</version>
                         <dependencies>
                             <dependency>
                                 <groupId>org.apache.ant</groupId>
                                 <artifactId>ant-jsch</artifactId>
-                                <version>1.7.1</version>
+                                <version>1.10.14</version>
                             </dependency>
                             <dependency>
-                                <groupId>jsch</groupId>
+                                <groupId>com.jcraft</groupId>
                                 <artifactId>jsch</artifactId>
-                                <version>0.1.25</version>
+                                <version>0.1.55</version>
                             </dependency>
                         </dependencies>
                         <executions>
@@ -428,20 +477,22 @@
                                     <goal>run</goal>
                                 </goals>
                                 <configuration>
-                                    <tasks>
+                                    <target>
                                         <echo>Setting up directory...</echo>
                                         <sshexec host="shell.sourceforge.net" username="${pebble.sf.net.username}" password="${pebble.sf.net.password}" trust="true" command="mkdir -p /home/frs/project/p/pe/pebble/pebble/${project.version}" />
                                         <echo>Uploading pebble zip to sourceforge...</echo>
                                         <scp todir="${pebble.sf.net.username}@frs.sourceforge.net:/home/frs/project/p/pe/pebble/pebble/${project.version}/" password="${pebble.sf.net.password}" trust="true" sftp="true" file="target/pebble-${project.version}.zip" />
                                         <echo>Updating permissions...</echo>
                                         <sshexec host="shell.sourceforge.net" username="${pebble.sf.net.username}" password="${pebble.sf.net.password}" trust="true" command="chmod -R g+w /home/frs/project/p/pe/pebble/pebble/${project.version}" />
-                                    </tasks>
+                                    </target>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-assembly-plugin</artifactId>
+                        <version>${maven-assembly-plugin.version}</version>
                         <executions>
                             <execution>
                                 <phase>post-site</phase>
@@ -461,13 +512,63 @@
                 </plugins>
             </build>
         </profile>
+
+        <!-- Multi-version Java build profiles -->
+        <profile>
+            <id>java8</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>1.8</maven.compiler.source>
+                <maven.compiler.target>1.8</maven.compiler.target>
+                <maven.compiler.release>8</maven.compiler.release>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>java11</id>
+            <activation>
+                <jdk>11</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>11</maven.compiler.source>
+                <maven.compiler.target>11</maven.compiler.target>
+                <maven.compiler.release>11</maven.compiler.release>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>java17</id>
+            <activation>
+                <jdk>17</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>17</maven.compiler.source>
+                <maven.compiler.target>17</maven.compiler.target>
+                <maven.compiler.release>17</maven.compiler.release>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>java21</id>
+            <activation>
+                <jdk>21</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>21</maven.compiler.source>
+                <maven.compiler.target>21</maven.compiler.target>
+                <maven.compiler.release>21</maven.compiler.release>
+            </properties>
+        </profile>
     </profiles>
     <reporting>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.4</version>
+                <version>${cobertura-maven-plugin.version}</version>
             </plugin>
         </plugins>
     </reporting>

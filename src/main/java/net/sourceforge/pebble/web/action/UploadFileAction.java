@@ -41,10 +41,10 @@ import net.sourceforge.pebble.web.view.RedirectView;
 import net.sourceforge.pebble.web.view.View;
 import net.sourceforge.pebble.web.view.impl.FileTooLargeView;
 import net.sourceforge.pebble.web.view.impl.NotEnoughSpaceView;
-import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUpload;
 import org.apache.commons.fileupload.FileUploadBase;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -81,14 +81,16 @@ public abstract class UploadFileAction extends AbstractFileAction {
     FileManager fileManager = new FileManager(blog, type);
 
     try {
-      boolean isMultipart = FileUpload.isMultipartContent(request);
+      boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 
       if (isMultipart) {
-        DiskFileUpload upload = new DiskFileUpload();
+        DiskFileItemFactory factory = new DiskFileItemFactory();
         long sizeInBytes = PebbleContext.getInstance().getConfiguration().getFileUploadSize() * 1024; // convert to bytes
+        factory.setSizeThreshold((int)sizeInBytes/4);
+        factory.setRepository(new File(System.getProperty("java.io.tmpdir")));
+
+        ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setSizeMax(sizeInBytes);
-        upload.setSizeThreshold((int)sizeInBytes/4);
-        upload.setRepositoryPath(System.getProperty("java.io.tmpdir"));
 
         List items;
         try {

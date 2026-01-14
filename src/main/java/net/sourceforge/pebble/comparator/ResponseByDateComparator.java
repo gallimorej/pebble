@@ -41,20 +41,18 @@ import java.util.Comparator;
  *
  * @author    Simon Brown
  */
-public class ResponseByDateComparator implements Comparator {
+public class ResponseByDateComparator implements Comparator<Response> {
 
   /**
    * Compares two objects.
    *
-   * @param o1  object 1
-   * @param o2  object 2
+   * @param r1  response 1
+   * @param r2  response 2
    * @return  -n, 0 or +n if the date represented by the second response is less than,
    *          the same as or greater than the first, respectively
    */
-  public int compare(Object o1, Object o2) {
-    Response r1 = (Response)o1;
-    Response r2 = (Response)o2;
-
+  @Override
+  public int compare(Response r1, Response r2) {
     return r2.getDate().compareTo(r1.getDate());
   }
 
