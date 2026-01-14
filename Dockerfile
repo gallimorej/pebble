@@ -1,8 +1,8 @@
-# Dockerfile for Pebble Legacy Application
-# Based on containerization assessment - preserves exact legacy dependencies
-# Java 6 + Tomcat 7.0.x for dependency isolation
+# Dockerfile for Pebble Application
+# Phase 2: Java 11 LTS + Tomcat 9.0.x
+# Spring 5.3.x + Lucene 9.x
 
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -17,13 +17,12 @@ RUN apt-get update && apt-get install -y \
     fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
-# Install OpenJDK 8 (closest available to Java 6 in Ubuntu 18.04)
-# Note: Java 6 is no longer available in modern repositories
-RUN apt-get update && apt-get install -y openjdk-8-jdk && rm -rf /var/lib/apt/lists/*
+# Install OpenJDK 11 (Java 11 LTS)
+RUN apt-get update && apt-get install -y openjdk-11-jdk && rm -rf /var/lib/apt/lists/*
 
 # Set JAVA_HOME (auto-detect Java installation)
 RUN echo "export JAVA_HOME=\$(dirname \$(dirname \$(readlink -f \$(which java))))" >> /etc/profile
-ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-arm64
 ENV PATH=$PATH:$JAVA_HOME/bin
 
 # Create application user for security
@@ -33,10 +32,10 @@ RUN groupadd -r pebble && useradd -r -g pebble -d /app pebble
 RUN mkdir -p /app/data /app/logs /opt/tomcat
 RUN chown -R pebble:pebble /app
 
-# Download and install Tomcat 7.0.109 (latest 7.x version)
-RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.109/bin/apache-tomcat-7.0.109.tar.gz \
-    && tar -xzf apache-tomcat-7.0.109.tar.gz -C /opt/tomcat --strip-components=1 \
-    && rm apache-tomcat-7.0.109.tar.gz \
+# Download and install Tomcat 9.0.85 (Java 11 and Spring 5 compatible)
+RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.85/bin/apache-tomcat-9.0.85.tar.gz \
+    && tar -xzf apache-tomcat-9.0.85.tar.gz -C /opt/tomcat --strip-components=1 \
+    && rm apache-tomcat-9.0.85.tar.gz \
     && chown -R pebble:pebble /opt/tomcat \
     && chmod +x /opt/tomcat/bin/*.sh
 
@@ -47,8 +46,8 @@ ENV CATALINA_TMPDIR=/tmp
 ENV JRE_HOME=$JAVA_HOME
 ENV CLASSPATH=$CATALINA_HOME/bin/bootstrap.jar:$CATALINA_HOME/bin/tomcat-juli.jar
 
-# Java memory settings optimized for container
-ENV JAVA_OPTS="-Xmx1024m -Xms512m -XX:MaxPermSize=256m -Djava.security.egd=file:/dev/./urandom"
+# Phase 2: Java 11 memory settings (MaxPermSize removed in Java 8+)
+ENV JAVA_OPTS="-Xmx1024m -Xms512m -XX:MaxMetaspaceSize=256m -Djava.security.egd=file:/dev/./urandom"
 ENV CATALINA_OPTS="-Dfile.encoding=UTF-8 -Duser.timezone=UTC"
 
 # Pebble-specific configuration
