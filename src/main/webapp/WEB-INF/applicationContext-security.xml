@@ -47,8 +47,9 @@
     </constructor-arg>
   </bean>
 
+  <!-- Custom authentication provider with automatic password upgrade support -->
   <bean id="daoAuthenticationProvider"
-        class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
+        class="net.sourceforge.pebble.security.PebbleAuthenticationProvider">
     <property name="userDetailsService" ref="pebbleUserDetailsService"/>
     <property name="passwordEncoder" ref="passwordEncoder"/>
   </bean>
@@ -69,8 +70,21 @@
   </bean>
 
   <!-- Spring Security 5.x uses crypto.password package instead of authentication.encoding -->
-  <bean id="passwordEncoder" class="org.springframework.security.crypto.password.MessageDigestPasswordEncoder">
+  <!-- BCrypt password encoder (OWASP recommended, includes salting and adaptive work factor) -->
+  <bean id="bcryptEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder">
+    <constructor-arg value="10"/> <!-- Cost factor: 10 = 1024 rounds (good balance of security vs performance) -->
+  </bean>
+
+  <!-- Legacy SHA-1 encoder for password upgrade strategy (validates old passwords during migration) -->
+  <bean id="sha1Encoder" class="org.springframework.security.crypto.password.MessageDigestPasswordEncoder">
     <constructor-arg value="SHA-1"/>
+  </bean>
+
+  <!-- Custom password encoder for automatic SHA-1 to BCrypt upgrade -->
+  <bean id="passwordEncoder" class="net.sourceforge.pebble.security.PebblePasswordEncoder">
+    <property name="modernEncoder" ref="bcryptEncoder"/>
+    <property name="legacyEncoder" ref="sha1Encoder"/>
+    <property name="securityRealm" ref="pebbleSecurityRealm"/>
   </bean>
 
   <!-- Automatically receives AuthenticationEvent messages -->
@@ -134,10 +148,11 @@
   </bean>
 
   <!-- Spring Security 5.x LoginUrlAuthenticationEntryPoint requires constructor arg -->
+  <!-- HTTPS enforcement: Redirects HTTP login attempts to HTTPS for secure credential transmission -->
   <bean id="authenticationEntryPoint"
         class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
     <constructor-arg value="/loginPage.action"/>
-    <property name="forceHttps" value="false"/>
+    <property name="forceHttps" value="true"/>
   </bean>
 
   <!-- Spring Security 5.x ExceptionTranslationFilter requires constructor args -->

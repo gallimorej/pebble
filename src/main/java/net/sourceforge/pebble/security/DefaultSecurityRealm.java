@@ -158,11 +158,9 @@ public class DefaultSecurityRealm implements SecurityRealm, ApplicationListener 
       return null;
     }
 
-    try {
-      FileInputStream in = new FileInputStream(user);
+    try (FileInputStream in = new FileInputStream(user)) {
       Properties props = new Properties();
       props.load(in);
-      in.close();
 
       String password = props.getProperty(PASSWORD);
       String[] roles = props.getProperty(ROLES).split(",");
@@ -271,11 +269,9 @@ public class DefaultSecurityRealm implements SecurityRealm, ApplicationListener 
       props.setProperty(DefaultSecurityRealm.PREFERENCE + preference, preferences.get(preference));
     }
 
-    try {
-      FileOutputStream out = new FileOutputStream(user);
+    try (FileOutputStream out = new FileOutputStream(user)) {
       props.store(out, "User : " + pud.getUsername());
       out.flush();
-      out.close();
     } catch (IOException ioe) {
       throw new SecurityRealmException(ioe);
     }

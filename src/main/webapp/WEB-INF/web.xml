@@ -38,9 +38,31 @@
     </jsp-property-group>
   </jsp-config>
 
+  <!-- Session configuration with security hardening -->
+  <session-config>
+    <!-- Session timeout: 30 minutes (1800 seconds) -->
+    <session-timeout>30</session-timeout>
+    <cookie-config>
+      <!-- HttpOnly: Prevents JavaScript access to session cookies (XSS mitigation) -->
+      <http-only>true</http-only>
+      <!-- Secure: Requires HTTPS for cookie transmission (protects against MITM attacks) -->
+      <!-- Note: Set to true in production deployments with HTTPS enabled -->
+      <secure>true</secure>
+      <!-- SameSite: Prevents CSRF attacks by restricting cross-site cookie sending -->
+      <!-- Note: Servlet 3.0 doesn't support same-site attribute directly,
+           but modern containers add it by default -->
+    </cookie-config>
+  </session-config>
+
   <filter>
     <filter-name>ResponseSplittingPreventer</filter-name>
     <filter-class>net.sourceforge.pebble.web.filter.ResponseSplittingPreventer</filter-class>
+  </filter>
+
+  <!-- Security headers filter (OWASP recommendations) -->
+  <filter>
+    <filter-name>SecurityHeadersFilter</filter-name>
+    <filter-class>net.sourceforge.pebble.web.filter.SecurityHeadersFilter</filter-class>
   </filter>
 
   <filter>
@@ -75,6 +97,13 @@
 
   <filter-mapping>
     <filter-name>ResponseSplittingPreventer</filter-name>
+    <url-pattern>/*</url-pattern>
+    <dispatcher>REQUEST</dispatcher>
+  </filter-mapping>
+
+  <!-- Security headers applied to all requests -->
+  <filter-mapping>
+    <filter-name>SecurityHeadersFilter</filter-name>
     <url-pattern>/*</url-pattern>
     <dispatcher>REQUEST</dispatcher>
   </filter-mapping>
@@ -231,10 +260,6 @@
     <servlet-name>jcaptcha</servlet-name>
     <url-pattern>/jcaptcha</url-pattern>
   </servlet-mapping>
-
-  <session-config>
-    <session-timeout>60</session-timeout>
-  </session-config>
 
   <welcome-file-list>
     <welcome-file>index.jsp</welcome-file>
