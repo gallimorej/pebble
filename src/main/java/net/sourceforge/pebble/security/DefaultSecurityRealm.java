@@ -41,8 +41,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.security.authentication.dao.SaltSource;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.*;
 import java.util.*;
@@ -71,8 +70,6 @@ public class DefaultSecurityRealm implements SecurityRealm, ApplicationListener 
   private Configuration configuration;
 
   private PasswordEncoder passwordEncoder;
-
-  private SaltSource saltSource;
 
   /** Map of open ids to users, cached in a copy on write map */
   private volatile Map<String, String> openIdMap;
@@ -258,7 +255,7 @@ public class DefaultSecurityRealm implements SecurityRealm, ApplicationListener 
 
     Properties props = new Properties();
     if (updatePassword) {
-      props.setProperty(DefaultSecurityRealm.PASSWORD, passwordEncoder.encodePassword(pud.getPassword(), saltSource.getSalt(pud)));
+      props.setProperty(DefaultSecurityRealm.PASSWORD, passwordEncoder.encode(pud.getPassword()));
     } else {
       props.setProperty(DefaultSecurityRealm.PASSWORD, currentDetails.getPassword());
     }
@@ -341,14 +338,6 @@ public class DefaultSecurityRealm implements SecurityRealm, ApplicationListener 
 
   public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
     this.passwordEncoder = passwordEncoder;
-  }
-
-  public SaltSource getSaltSource() {
-    return saltSource;
-  }
-
-  public void setSaltSource(SaltSource saltSource) {
-    this.saltSource = saltSource;
   }
 
 }

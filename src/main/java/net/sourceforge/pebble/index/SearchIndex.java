@@ -38,21 +38,28 @@ import net.sourceforge.pebble.search.SearchResults;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.StoredField;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.Hits;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
@@ -86,8 +93,12 @@ public class SearchIndex {
     synchronized (blog) {
       try {
         Analyzer analyzer = getAnalyzer();
-        IndexWriter writer = new IndexWriter(searchDirectory, analyzer, true);
+        Directory dir = FSDirectory.open(searchDirectory.toPath());
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
+        IndexWriter writer = new IndexWriter(dir, config);
         writer.close();
+        dir.close();
       } catch (Exception e) {
         log.error(e.getMessage(), e);
       }
@@ -101,13 +112,18 @@ public class SearchIndex {
     synchronized (blog) {
       try {
         Analyzer analyzer = getAnalyzer();
-        IndexWriter writer = new IndexWriter(blog.getSearchIndexDirectory(), analyzer, false);
+        File indexDir = new File(blog.getSearchIndexDirectory());
+        Directory dir = FSDirectory.open(indexDir.toPath());
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+        IndexWriter writer = new IndexWriter(dir, config);
 
         for (BlogEntry blogEntry : blogEntries) {
           index(blogEntry, writer);
         }
 
         writer.close();
+        dir.close();
       } catch (Exception e) {
         log.error(e.getMessage(), e);
       }
@@ -121,13 +137,18 @@ public class SearchIndex {
     synchronized (blog) {
       try {
         Analyzer analyzer = getAnalyzer();
-        IndexWriter writer = new IndexWriter(blog.getSearchIndexDirectory(), analyzer, false);
+        File indexDir = new File(blog.getSearchIndexDirectory());
+        Directory dir = FSDirectory.open(indexDir.toPath());
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+        IndexWriter writer = new IndexWriter(dir, config);
 
         for (StaticPage staticPage : staticPages) {
           index(staticPage, writer);
         }
 
         writer.close();
+        dir.close();
       } catch (Exception e) {
         log.error(e.getMessage(), e);
       }
@@ -148,9 +169,14 @@ public class SearchIndex {
         unindex(blogEntry);
 
         Analyzer analyzer = getAnalyzer();
-        IndexWriter writer = new IndexWriter(blog.getSearchIndexDirectory(), analyzer, false);
+        File indexDir = new File(blog.getSearchIndexDirectory());
+        Directory dir = FSDirectory.open(indexDir.toPath());
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+        IndexWriter writer = new IndexWriter(dir, config);
         index(blogEntry, writer);
         writer.close();
+        dir.close();
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -171,9 +197,14 @@ public class SearchIndex {
         unindex(staticPage);
 
         Analyzer analyzer = getAnalyzer();
-        IndexWriter writer = new IndexWriter(blog.getSearchIndexDirectory(), analyzer, false);
+        File indexDir = new File(blog.getSearchIndexDirectory());
+        Directory dir = FSDirectory.open(indexDir.toPath());
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+        IndexWriter writer = new IndexWriter(dir, config);
         index(staticPage, writer);
         writer.close();
+        dir.close();
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -200,10 +231,20 @@ public class SearchIndex {
     try {
       synchronized (blog) {
         log.debug("Attempting to delete index for " + blogEntry.getTitle());
-        IndexReader reader = IndexReader.open(blog.getSearchIndexDirectory());
+        File indexDir = new File(blog.getSearchIndexDirectory());
+        if (!indexDir.exists()) {
+          return; // Nothing to delete if index doesn't exist
+        }
+        Directory dir = FSDirectory.open(indexDir.toPath());
+        Analyzer analyzer = getAnalyzer();
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+        IndexWriter writer = new IndexWriter(dir, config);
         Term term = new Term("id", blogEntry.getId());
-        log.debug("Deleted " + reader.delete(term) + " document(s) from the index");
-        reader.close();
+        long deleted = writer.deleteDocuments(term);
+        log.debug("Deleted " + deleted + " document(s) from the index");
+        writer.close();
+        dir.close();
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -219,10 +260,20 @@ public class SearchIndex {
     try {
       synchronized (blog) {
         log.debug("Attempting to delete index for " + staticPage.getTitle());
-        IndexReader reader = IndexReader.open(blog.getSearchIndexDirectory());
+        File indexDir = new File(blog.getSearchIndexDirectory());
+        if (!indexDir.exists()) {
+          return; // Nothing to delete if index doesn't exist
+        }
+        Directory dir = FSDirectory.open(indexDir.toPath());
+        Analyzer analyzer = getAnalyzer();
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+        IndexWriter writer = new IndexWriter(dir, config);
         Term term = new Term("id", staticPage.getId());
-        log.debug("Deleted " + reader.delete(term) + " document(s) from the index");
-        reader.close();
+        long deleted = writer.deleteDocuments(term);
+        log.debug("Deleted " + deleted + " document(s) from the index");
+        writer.close();
+        dir.close();
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -243,32 +294,32 @@ public class SearchIndex {
     try {
       log.debug("Indexing " + blogEntry.getTitle());
       Document document = new Document();
-      document.add(Field.Keyword("id", blogEntry.getId()));
+      document.add(new StringField("id", blogEntry.getId(), Field.Store.YES));
       if (blogEntry.getTitle() != null) {
-        document.add(Field.Text("title", blogEntry.getTitle()));
+        document.add(new TextField("title", blogEntry.getTitle(), Field.Store.YES));
       } else {
-        document.add(Field.Text("title", ""));
+        document.add(new TextField("title", "", Field.Store.YES));
       }
       if (blogEntry.getSubtitle() != null) {
-        document.add(Field.Text("subtitle", blogEntry.getSubtitle()));
+        document.add(new TextField("subtitle", blogEntry.getSubtitle(), Field.Store.YES));
       } else {
-        document.add(Field.Text("subtitle", ""));
+        document.add(new TextField("subtitle", "", Field.Store.YES));
       }
-      document.add(Field.Keyword("permalink", blogEntry.getPermalink()));
-      document.add(Field.UnIndexed("date", DateField.dateToString(blogEntry.getDate())));
+      document.add(new StringField("permalink", blogEntry.getPermalink(), Field.Store.YES));
+      document.add(new StoredField("date", blogEntry.getDate().getTime()));
       if (blogEntry.getBody() != null) {
-        document.add(Field.UnStored("body", blogEntry.getBody()));
+        document.add(new TextField("body", blogEntry.getBody(), Field.Store.NO));
       } else {
-        document.add(Field.UnStored("body", ""));
+        document.add(new TextField("body", "", Field.Store.NO));
       }
       if (blogEntry.getTruncatedContent() != null) {
-        document.add(Field.Text("truncatedBody", blogEntry.getTruncatedContent()));
+        document.add(new TextField("truncatedBody", blogEntry.getTruncatedContent(), Field.Store.YES));
       } else {
-        document.add(Field.Text("truncatedBody", ""));
+        document.add(new TextField("truncatedBody", "", Field.Store.YES));
       }
 
       if (blogEntry.getAuthor() != null) {
-        document.add(Field.Text("author", blogEntry.getAuthor()));
+        document.add(new TextField("author", blogEntry.getAuthor(), Field.Store.YES));
       }
 
       // build up one large string with all searchable content
@@ -279,11 +330,11 @@ public class SearchIndex {
       searchableContent.append(blogEntry.getBody());
 
       for (Category category : blogEntry.getCategories()) {
-        document.add(Field.Text("category", category.getId()));
+        document.add(new TextField("category", category.getId(), Field.Store.YES));
       }
 
       for (Tag tag : blogEntry.getAllTags()) {
-        document.add(Field.Text("tag", tag.getName()));
+        document.add(new TextField("tag", tag.getName(), Field.Store.YES));
       }
 
       searchableContent.append(" ");
@@ -305,7 +356,7 @@ public class SearchIndex {
       }
 
       // join the title and body together to make searching on them both easier
-      document.add(Field.UnStored("blogEntry", searchableContent.toString()));
+      document.add(new TextField("blogEntry", searchableContent.toString(), Field.Store.NO));
 
       writer.addDocument(document);
     } catch (Exception e) {
@@ -322,27 +373,27 @@ public class SearchIndex {
     try {
       log.debug("Indexing " + staticPage.getTitle());
       Document document = new Document();
-      document.add(Field.Keyword("id", staticPage.getId()));
+      document.add(new StringField("id", staticPage.getId(), Field.Store.YES));
       if (staticPage.getTitle() != null) {
-        document.add(Field.Text("title", staticPage.getTitle()));
+        document.add(new TextField("title", staticPage.getTitle(), Field.Store.YES));
       } else {
-        document.add(Field.Text("title", ""));
+        document.add(new TextField("title", "", Field.Store.YES));
       }
-      document.add(Field.Keyword("permalink", staticPage.getPermalink()));
-      document.add(Field.UnIndexed("date", DateField.dateToString(staticPage.getDate())));
+      document.add(new StringField("permalink", staticPage.getPermalink(), Field.Store.YES));
+      document.add(new StoredField("date", staticPage.getDate().getTime()));
       if (staticPage.getBody() != null) {
-        document.add(Field.UnStored("body", staticPage.getBody()));
+        document.add(new TextField("body", staticPage.getBody(), Field.Store.NO));
       } else {
-        document.add(Field.UnStored("body", ""));
+        document.add(new TextField("body", "", Field.Store.NO));
       }
       if (staticPage.getTruncatedContent() != null) {
-        document.add(Field.Text("truncatedBody", staticPage.getTruncatedContent()));
+        document.add(new TextField("truncatedBody", staticPage.getTruncatedContent(), Field.Store.YES));
       } else {
-        document.add(Field.Text("truncatedBody", ""));
+        document.add(new TextField("truncatedBody", "", Field.Store.YES));
       }
 
       if (staticPage.getAuthor() != null) {
-        document.add(Field.Text("author", staticPage.getAuthor()));
+        document.add(new TextField("author", staticPage.getAuthor(), Field.Store.YES));
       }
 
       // build up one large string with all searchable content
@@ -353,7 +404,7 @@ public class SearchIndex {
       searchableContent.append(staticPage.getBody());
 
       // join the title and body together to make searching on them both easier
-      document.add(Field.UnStored("blogEntry", searchableContent.toString()));
+      document.add(new TextField("blogEntry", searchableContent.toString(), Field.Store.NO));
 
       writer.addDocument(document);
     } catch (Exception e) {
@@ -369,15 +420,24 @@ public class SearchIndex {
     searchResults.setQuery(queryString);
 
     if (queryString != null && queryString.length() > 0) {
-      Searcher searcher = null;
+      Directory dir = null;
+      IndexReader reader = null;
 
       try {
-        searcher = new IndexSearcher(blog.getSearchIndexDirectory());
-        Query query = QueryParser.parse(queryString, "blogEntry", getAnalyzer());
-        Hits hits = searcher.search(query);
+        File indexDir = new File(blog.getSearchIndexDirectory());
+        if (!indexDir.exists()) {
+          return searchResults; // Empty results if no index exists
+        }
+        dir = FSDirectory.open(indexDir.toPath());
+        reader = DirectoryReader.open(dir);
+        IndexSearcher searcher = new IndexSearcher(reader);
+        QueryParser parser = new QueryParser("blogEntry", getAnalyzer());
+        Query query = parser.parse(queryString);
+        TopDocs topDocs = searcher.search(query, 1000); // Max 1000 results
 
-        for (int i = 0; i < hits.length(); i++) {
-          Document doc = hits.doc(i);
+        for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+          Document doc = searcher.doc(scoreDoc.doc);
+          long dateMillis = doc.getField("date").numericValue().longValue();
           SearchHit result = new SearchHit(
               blog,
               doc.get("id"),
@@ -385,8 +445,8 @@ public class SearchIndex {
               doc.get("title"),
               doc.get("subtitle"),
               doc.get("truncatedBody"),
-              DateField.stringToDate(doc.get("date")),
-              hits.score(i));
+              new Date(dateMillis),
+              scoreDoc.score);
           searchResults.add(result);
         }
       } catch (ParseException pe) {
@@ -396,9 +456,16 @@ public class SearchIndex {
         e.printStackTrace();
         throw new SearchException(e.getMessage());
       } finally {
-        if (searcher != null) {
+        if (reader != null) {
           try {
-            searcher.close();
+            reader.close();
+          } catch (IOException e) {
+            // can't do much now! ;-)
+          }
+        }
+        if (dir != null) {
+          try {
+            dir.close();
           } catch (IOException e) {
             // can't do much now! ;-)
           }

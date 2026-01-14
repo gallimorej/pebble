@@ -40,15 +40,14 @@ import net.sourceforge.pebble.security.SecurityRealmException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
-import org.springframework.security.authentication.encoding.PlaintextPasswordEncoder;
-import org.springframework.security.authentication.encoding.ShaPasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.MessageDigestPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collection;
 
@@ -93,7 +92,7 @@ public final class SecurityUtils {
 
   public static boolean isUserInRole(Authentication auth, String role) {
     if (auth != null) {
-      Collection<GrantedAuthority> authorities = auth.getAuthorities();
+      Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
       if (authorities != null) {
         for (GrantedAuthority authority : authorities) {
           if (authority.getAuthority().equals(role)) {
@@ -178,22 +177,22 @@ public final class SecurityUtils {
   }
 
   public static void runAsBlogOwner() {
-    Authentication auth = new TestingAuthenticationToken("username", "password", new GrantedAuthority[] {new GrantedAuthorityImpl(Constants.BLOG_OWNER_ROLE)});
+    Authentication auth = new TestingAuthenticationToken("username", "password", Constants.BLOG_OWNER_ROLE);
     SecurityContextHolder.getContext().setAuthentication(auth);
   }
 
   public static void runAsBlogPublisher() {
-    Authentication auth = new TestingAuthenticationToken("username", "password", new GrantedAuthority[] {new GrantedAuthorityImpl(Constants.BLOG_PUBLISHER_ROLE)});
+    Authentication auth = new TestingAuthenticationToken("username", "password", Constants.BLOG_PUBLISHER_ROLE);
     SecurityContextHolder.getContext().setAuthentication(auth);
   }
 
   public static void runAsBlogContributor() {
-    Authentication auth = new TestingAuthenticationToken("username", "password", new GrantedAuthority[] {new GrantedAuthorityImpl(Constants.BLOG_CONTRIBUTOR_ROLE)});
+    Authentication auth = new TestingAuthenticationToken("username", "password", Constants.BLOG_CONTRIBUTOR_ROLE);
     SecurityContextHolder.getContext().setAuthentication(auth);
   }
 
   public static void runAsAnonymous() {
-    Authentication auth = new TestingAuthenticationToken("username", "password", new GrantedAuthority[] {});
+    Authentication auth = new TestingAuthenticationToken("username", "password");
     SecurityContextHolder.getContext().setAuthentication(auth);
   }
 
@@ -254,19 +253,20 @@ public final class SecurityUtils {
   }
 
   public static void main(String[] args) {
-    if (args.length != 3) {
-      System.out.println("Usage : [md5|sha|plaintext] username password");
+    if (args.length != 2) {
+      System.out.println("Usage : [bcrypt|md5|sha256] password");
+      System.out.println("Note: bcrypt is recommended for new installations");
+    } else if (args[0].equals("bcrypt")) {
+      PasswordEncoder encoder = new BCryptPasswordEncoder();
+      System.out.println(encoder.encode(args[1]));
     } else if (args[0].equals("md5")) {
-      PasswordEncoder encoder = new Md5PasswordEncoder();
-      System.out.println(encoder.encodePassword(args[2], args[1]));
-    } else if (args[0].equals("sha")) {
-      PasswordEncoder encoder = new ShaPasswordEncoder();
-      System.out.println(encoder.encodePassword(args[2], args[1]));
-    } else if (args[0].equals("plaintext")) {
-      PasswordEncoder encoder = new PlaintextPasswordEncoder();
-      System.out.println(encoder.encodePassword(args[2], args[1]));
+      PasswordEncoder encoder = new MessageDigestPasswordEncoder("MD5");
+      System.out.println(encoder.encode(args[1]));
+    } else if (args[0].equals("sha256")) {
+      PasswordEncoder encoder = new MessageDigestPasswordEncoder("SHA-256");
+      System.out.println(encoder.encode(args[1]));
     } else {
-      System.out.println("Algorithm must be md5, sha or plaintext");
+      System.out.println("Algorithm must be bcrypt, md5, or sha256");
     }
   }
 

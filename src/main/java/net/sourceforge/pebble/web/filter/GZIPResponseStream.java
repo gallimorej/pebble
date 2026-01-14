@@ -93,4 +93,15 @@ public class GZIPResponseStream extends ServletOutputStream {
     }
     gzipstream.write(b, off, len);
   }
+
+  // Phase 2: Servlet 3.1 API compliance - new abstract methods
+  @Override
+  public boolean isReady() {
+    return !closed;
+  }
+
+  @Override
+  public void setWriteListener(WriteListener writeListener) {
+    throw new UnsupportedOperationException("WriteListener not supported for GZIP compression");
+  }
 }

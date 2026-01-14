@@ -49,7 +49,7 @@ import java.util.Collection;
  *
  * @author Simon Brown
  */
-public class PrivateBlogVoter implements AccessDecisionVoter {
+public class PrivateBlogVoter implements AccessDecisionVoter<Object> {
 
   /**
    * Indicates whether this <code>AccessDecisionVoter</code> is able to vote on the passed

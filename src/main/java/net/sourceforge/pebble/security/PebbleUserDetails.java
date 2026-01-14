@@ -34,7 +34,7 @@ package net.sourceforge.pebble.security;
 
 import net.sourceforge.pebble.Constants;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
@@ -221,10 +221,10 @@ public class PebbleUserDetails implements UserDetails {
     Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
     if (roles != null) {
       for (String role : roles) {
-        authorities.add(new GrantedAuthorityImpl(role.trim()));
+        authorities.add(new SimpleGrantedAuthority(role.trim()));
       }
     }
-    authorities.add(new GrantedAuthorityImpl(Constants.BLOG_READER_ROLE));
+    authorities.add(new SimpleGrantedAuthority(Constants.BLOG_READER_ROLE));
 
     return authorities;
   }
