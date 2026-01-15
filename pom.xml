@@ -14,15 +14,16 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <!-- Phase 3: Java 17 LTS -->
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <maven.compiler.release>17</maven.compiler.release>
+        <!-- Phase 4: Java 21 LTS -->
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
 
         <!-- Phase 2: Spring 5.3.x -->
         <!-- Phase 3B-R: Spring 6.x (requires Java 17 + Jakarta EE 9) -->
-        <spring.version>6.0.23</spring.version>
-        <spring-security.version>6.2.1</spring-security.version>
+        <!-- Phase 4A: Spring 6.1+ (virtual thread support) -->
+        <spring.version>6.1.14</spring.version>
+        <spring-security.version>6.2.2</spring-security.version>
 
         <!-- Phase 2: Lucene 9.x -->
         <lucene.version>9.9.2</lucene.version>
@@ -31,7 +32,7 @@
         <jaxb.version>2.3.9</jaxb.version>
 
         <!-- Plugin versions -->
-        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
         <maven-war-plugin.version>3.4.0</maven-war-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>

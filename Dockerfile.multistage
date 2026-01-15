@@ -1,14 +1,14 @@
 # Multi-Stage Dockerfile for Pebble Application
-# Phase 3A: Java 17 LTS with isolated build environment
+# Phase 4A: Java 21 LTS Foundation
 # Zero local dependencies required - everything runs in Docker
 
 # ============================================================================
-# Stage 1: Build Stage (Maven + Java 17)
+# Stage 1: Build Stage (Maven + Java 21)
 # ============================================================================
-FROM maven:3.9.5-eclipse-temurin-17 AS builder
+FROM maven:3.9.5-eclipse-temurin-21 AS builder
 
 LABEL stage=builder
-LABEL description="Build stage - compiles Pebble with Java 17 and runs tests"
+LABEL description="Build stage - compiles Pebble with Java 21 and runs tests"
 
 # Set working directory
 WORKDIR /build
@@ -21,7 +21,7 @@ COPY src ./src
 # Dependencies will be downloaded during the package phase
 
 # Build application and run tests
-# Use --add-opens flags for Java 17 module system compatibility
+# Use --add-opens flags for Java 21 module system compatibility
 RUN mvn clean package -B \
     -Darguments="--add-opens java.base/java.lang=ALL-UNNAMED \
                  --add-opens java.base/java.util=ALL-UNNAMED \
@@ -31,13 +31,13 @@ RUN mvn clean package -B \
 RUN ls -lh /build/target/*.war
 
 # ============================================================================
-# Stage 2: Runtime Stage (Tomcat + Java 17)
+# Stage 2: Runtime Stage (Tomcat + Java 21)
 # ============================================================================
 FROM ubuntu:20.04
 
 LABEL maintainer="Pebble Blog"
-LABEL version="Phase 3B-R - Spring 6 + Jakarta EE"
-LABEL description="Pebble blog runtime with Java 17, Tomcat 10, Spring 6, Jakarta Servlet 5"
+LABEL version="Phase 4A - Java 21 Foundation"
+LABEL description="Pebble blog runtime with Java 21, Tomcat 10, Spring 6.1, Jakarta Servlet 5"
 
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -52,8 +52,8 @@ RUN apt-get update && apt-get install -y \
     fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
-# Install OpenJDK 17 (Java 17 LTS)
-RUN apt-get update && apt-get install -y openjdk-17-jdk && rm -rf /var/lib/apt/lists/*
+# Install OpenJDK 21 (Java 21 LTS)
+RUN apt-get update && apt-get install -y openjdk-21-jdk && rm -rf /var/lib/apt/lists/*
 
 # Set JAVA_HOME environment variable (architecture-agnostic)
 RUN DETECTED_JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java)))) && \
@@ -61,7 +61,7 @@ RUN DETECTED_JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java)))) && \
     echo "Detected JAVA_HOME: ${DETECTED_JAVA_HOME}"
 
 # Set JAVA_HOME for runtime (detect at build time)
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-arm64
 ENV PATH=$PATH:$JAVA_HOME/bin
 
 # Verify Java installation
@@ -88,10 +88,11 @@ ENV CATALINA_TMPDIR=/tmp
 ENV JRE_HOME=$JAVA_HOME
 ENV CLASSPATH=$CATALINA_HOME/bin/bootstrap.jar:$CATALINA_HOME/bin/tomcat-juli.jar
 
-# Phase 3B-R: Java 17 + Spring 6 optimized JVM settings
+# Phase 4B: Java 21 + Spring 6.1 + Virtual Threads enabled
 # - G1GC with 200ms pause time target (improved from default 300ms)
 # - String deduplication for memory savings
-# - Proper metaspace sizing for Spring 6
+# - Proper metaspace sizing for Spring 6.1
+# - Virtual threads ENABLED (Phase 4B)
 ENV JAVA_OPTS="-Xmx1024m \
 -Xms512m \
 -XX:MaxMetaspaceSize=256m \
@@ -100,7 +101,12 @@ ENV JAVA_OPTS="-Xmx1024m \
 -XX:+UseStringDeduplication \
 -Djava.security.egd=file:/dev/./urandom"
 
-ENV CATALINA_OPTS="-Dfile.encoding=UTF-8 -Duser.timezone=UTC"
+# Phase 4B: Enable virtual threads in Tomcat 10.1.19
+# Tomcat will use virtual threads for request handling when this property is set
+ENV CATALINA_OPTS="-Dfile.encoding=UTF-8 \
+-Duser.timezone=UTC \
+-Djdk.virtualThreadScheduler.parallelism=1 \
+-Djdk.virtualThreadScheduler.maxPoolSize=256"
 
 # Pebble-specific configuration
 ENV PEBBLE_DATA_DIR=/app/data
