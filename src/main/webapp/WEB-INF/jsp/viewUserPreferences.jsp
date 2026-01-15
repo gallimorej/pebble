@@ -80,31 +80,6 @@
       <br/>
     </c:if>
 
-    <p><fmt:message key="openid.add.description"/></p>
-    <div class="loginPageForm">
-      <ul id="loginOptions">
-        <li id="loginOptionOpenId" class="loginOption">OpenID</li>
-        <li id="loginOptionGoogle" class="loginOption">Google</li>
-      </ul>
-
-      <div id="loginOptionOpenIdArea" class="loginOptionArea">
-        <form id="openIdLoginForm" name="openIdloginForm" method="post"
-              action="${url:rewrite(blogUrl)}addOpenId.secureaction">
-          <input type="hidden" name="redirectUrl" value="${blog.relativeUrl}"/>
-          <div class="field">
-            <label for="openIdIdentifier">OpenId</label>
-            <input id="openIdIdentifier" type="text" name="openid_identifier" />
-          </div>
-          <div class="loginButtons"><input type="submit" value="<fmt:message key='common.add' />" /></div>
-        </form>
-      </div>
-
-      <div id="loginOptionGoogleArea" class="loginOptionArea">
-        <div class="loginUsingGoogle">Add my OpenID for <img src="common/images/google_logo.jpg" alt="Google"/></div>
-      </div>
-    </div>
-    <script type="text/javascript">
-      Event.observe(window, "load", initLoginScreen);
-    </script>
+    <!-- OpenID support removed in Spring Security 6 migration -->
   </div>
 </div>

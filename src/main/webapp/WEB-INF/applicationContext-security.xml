@@ -14,7 +14,6 @@
         <security:filter-chain pattern="/xmlrpc/**" filters="anonymousProcessingFilter"/>
         <security:filter-chain pattern="/**/*.xml" filters="
         securityContextPersistenceFilter,
-        openIdAuthenticationFilter,
         basicProcessingFilter,
         rememberMeProcessingFilter,
         basicExceptionTranslationFilter,
@@ -23,7 +22,6 @@
         "/>
       <security:filter-chain pattern="/**" filters="
         securityContextPersistenceFilter,
-        openIdAuthenticationFilter,
         formProcessingFilter,
         rememberMeProcessingFilter,
         exceptionTranslationFilter,
@@ -42,7 +40,6 @@
       <list>
         <ref bean="daoAuthenticationProvider"/>
         <ref bean="rememberMeAuthenticationProvider"/>
-        <ref bean="openIdAuthenticationProvider"/>
       </list>
     </constructor-arg>
   </bean>
@@ -148,11 +145,11 @@
   </bean>
 
   <!-- Spring Security 5.x LoginUrlAuthenticationEntryPoint requires constructor arg -->
-  <!-- HTTPS enforcement: Redirects HTTP login attempts to HTTPS for secure credential transmission -->
+  <!-- HTTPS enforcement disabled for development. Set to true in production with HTTPS configured -->
   <bean id="authenticationEntryPoint"
         class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
     <constructor-arg value="/loginPage.action"/>
-    <property name="forceHttps" value="true"/>
+    <property name="forceHttps" value="false"/>
   </bean>
 
   <!-- Spring Security 5.x ExceptionTranslationFilter requires constructor args -->
@@ -185,30 +182,6 @@
   <!-- Spring Security 5.x ExceptionTranslationFilter requires constructor args -->
   <bean id="basicExceptionTranslationFilter" class="org.springframework.security.web.access.ExceptionTranslationFilter">
     <constructor-arg ref="basicAuthenticationEntryPoint"/>
-  </bean>
-
-  <!-- ===================== OPEN ID SUPPORT ==================== -->
-
-  <bean id="openIdConsumer" class="org.springframework.security.openid.OpenID4JavaConsumer"/>
-
-  <bean id="openIdAuthenticationFilter" class="org.springframework.security.openid.OpenIDAuthenticationFilter">
-    <property name="authenticationManager" ref="authenticationManager"/>
-    <property name="rememberMeServices" ref="rememberMeServices"/>
-    <property name="consumer" ref="openIdConsumer"/>
-    <property name="authenticationSuccessHandler" ref="authenticationSuccessHandler"/>
-    <property name="authenticationFailureHandler" ref="openIdAuthenticationFailureHandler"/>
-  </bean>
-
-  <bean id="openIdAuthenticationProvider" class="org.springframework.security.openid.OpenIDAuthenticationProvider">
-    <property name="userDetailsService" ref="openIdUserDetailsService"/>
-  </bean>
-
-  <bean id="openIdUserDetailsService" class="net.sourceforge.pebble.security.OpenIdUserDetailsService">
-    <property name="securityRealm" ref="pebbleSecurityRealm"/>
-  </bean>
-
-  <bean id="openIdAuthenticationFailureHandler" class="net.sourceforge.pebble.security.OpenIdAuthenticationFailureHandler">
-    <property name="redirectStrategy" ref="redirectStrategy"/>
   </bean>
 
   <!-- Note the order that entries are placed against the objectDefinitionSource is critical.
