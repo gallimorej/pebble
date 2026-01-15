@@ -36,8 +36,8 @@ RUN ls -lh /build/target/*.war
 FROM ubuntu:20.04
 
 LABEL maintainer="Pebble Blog"
-LABEL version="Phase 3A - Java 17 LTS"
-LABEL description="Pebble blog runtime with Java 17, Tomcat 9, Spring 5.3"
+LABEL version="Phase 3B-R - Spring 6 + Jakarta EE"
+LABEL description="Pebble blog runtime with Java 17, Tomcat 10, Spring 6, Jakarta Servlet 5"
 
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -74,10 +74,10 @@ RUN groupadd -r pebble && useradd -r -g pebble -d /app pebble
 RUN mkdir -p /app/data /app/logs /opt/tomcat
 RUN chown -R pebble:pebble /app
 
-# Download and install Tomcat 9.0.85 (Java 17 compatible)
-RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.85/bin/apache-tomcat-9.0.85.tar.gz \
-    && tar -xzf apache-tomcat-9.0.85.tar.gz -C /opt/tomcat --strip-components=1 \
-    && rm apache-tomcat-9.0.85.tar.gz \
+# Download and install Tomcat 10.1.19 (Jakarta Servlet 5.0 compatible)
+RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-10/v10.1.19/bin/apache-tomcat-10.1.19.tar.gz \
+    && tar -xzf apache-tomcat-10.1.19.tar.gz -C /opt/tomcat --strip-components=1 \
+    && rm apache-tomcat-10.1.19.tar.gz \
     && chown -R pebble:pebble /opt/tomcat \
     && chmod +x /opt/tomcat/bin/*.sh
 
@@ -88,10 +88,10 @@ ENV CATALINA_TMPDIR=/tmp
 ENV JRE_HOME=$JAVA_HOME
 ENV CLASSPATH=$CATALINA_HOME/bin/bootstrap.jar:$CATALINA_HOME/bin/tomcat-juli.jar
 
-# Phase 3A: Java 17 optimized JVM settings
+# Phase 3B-R: Java 17 + Spring 6 optimized JVM settings
 # - G1GC with 200ms pause time target (improved from default 300ms)
 # - String deduplication for memory savings
-# - Proper metaspace sizing
+# - Proper metaspace sizing for Spring 6
 ENV JAVA_OPTS="-Xmx1024m \
 -Xms512m \
 -XX:MaxMetaspaceSize=256m \

@@ -35,7 +35,7 @@ import net.sourceforge.pebble.Constants;
 import net.sourceforge.pebble.domain.FileMetaData;
 import net.sourceforge.pebble.web.security.RequireSecurityToken;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Allows the user to upload an image to the editable theme.

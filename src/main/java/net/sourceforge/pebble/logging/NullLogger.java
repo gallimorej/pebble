@@ -33,7 +33,7 @@ package net.sourceforge.pebble.logging;
 
 import net.sourceforge.pebble.domain.Blog;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Calendar;
 

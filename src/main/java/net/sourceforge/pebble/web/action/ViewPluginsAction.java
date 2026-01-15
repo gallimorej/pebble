@@ -37,9 +37,9 @@ import net.sourceforge.pebble.plugins.PluginLocator;
 import net.sourceforge.pebble.web.view.View;
 import net.sourceforge.pebble.web.view.impl.PluginsView;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Views the plugins associated with the current blog.

@@ -31,7 +31,7 @@
  */
 package net.sourceforge.pebble.api.confirmation;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Represents an abstraction of the various ways that confirmations can happen.

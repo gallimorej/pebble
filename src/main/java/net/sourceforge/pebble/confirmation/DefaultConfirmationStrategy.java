@@ -31,7 +31,7 @@
  */
 package net.sourceforge.pebble.confirmation;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Default implementation that just asks the user to click a button to confirm.

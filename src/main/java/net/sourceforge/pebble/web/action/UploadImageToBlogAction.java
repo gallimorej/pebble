@@ -36,7 +36,7 @@ import net.sourceforge.pebble.web.action.UploadFileAction;
 import net.sourceforge.pebble.domain.FileMetaData;
 import net.sourceforge.pebble.web.security.RequireSecurityToken;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Allows the user to upload an image to their blog.

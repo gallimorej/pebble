@@ -34,7 +34,7 @@ package net.sourceforge.pebble.api.openid;
 
 import net.sourceforge.pebble.api.decorator.PageDecoratorContext;
 
-import javax.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.JspWriter;
 import java.io.IOException;
 
 /**

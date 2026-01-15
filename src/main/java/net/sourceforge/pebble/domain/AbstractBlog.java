@@ -42,7 +42,7 @@ import java.util.*;
 
 import net.sourceforge.pebble.PebbleContext;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public abstract class AbstractBlog extends TimePeriod {
 

@@ -33,8 +33,8 @@ package net.sourceforge.pebble.web.filter;
 
 import java.io.*;
 import java.util.zip.GZIPOutputStream;
-import javax.servlet.*;
-import javax.servlet.http.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 
 public class GZIPResponseStream extends ServletOutputStream {
 

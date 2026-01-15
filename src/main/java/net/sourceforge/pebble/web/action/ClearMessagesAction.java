@@ -38,9 +38,9 @@ import net.sourceforge.pebble.web.view.impl.MessagesView;
 import net.sourceforge.pebble.Constants;
 import net.sourceforge.pebble.domain.Blog;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
 
 /**
  * Allows the user to clear all messages for the current blog.

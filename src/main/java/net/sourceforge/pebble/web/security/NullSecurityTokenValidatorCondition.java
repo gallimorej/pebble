@@ -31,7 +31,7 @@
  */
 package net.sourceforge.pebble.web.security;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Condition that means there is no condition, all requests should be validated

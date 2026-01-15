@@ -31,7 +31,7 @@
  */
 package net.sourceforge.pebble.web.action;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * The superclass for all secure command/action components.

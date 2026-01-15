@@ -35,7 +35,7 @@ import com.octo.captcha.service.CaptchaServiceException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Image captcha comment confirmation strategy.

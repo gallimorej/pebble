@@ -33,7 +33,7 @@ package net.sourceforge.pebble.plugins;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
-import javax.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.JspWriter;
 import java.io.IOException;
 
 /**

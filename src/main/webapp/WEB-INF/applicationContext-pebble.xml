@@ -73,4 +73,10 @@
     <property name="actionMappingFileName" value="secure-action.properties"/>
   </bean>
 
+  <!-- Phase 3B-R: Spring Native Multipart Resolver (replaces commons-fileupload) -->
+  <!-- Uses servlet 3.0+ native multipart support, compatible with Tomcat 9+ -->
+  <bean id="multipartResolver" class="org.springframework.web.multipart.support.StandardServletMultipartResolver">
+    <!-- No additional configuration needed - size limits configured in web.xml -->
+  </bean>
+
 </beans>

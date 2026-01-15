@@ -39,9 +39,9 @@ import net.sourceforge.pebble.domain.Blog;
 import net.sourceforge.pebble.Constants;
 import net.sourceforge.pebble.util.Utilities;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
 
 /**
  * Resets the theme associated with a blog back to "default".

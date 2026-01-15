@@ -31,7 +31,7 @@
  */
 package net.sourceforge.pebble.plugins;
 
-import javax.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.JspWriter;
 import java.io.IOException;
 
 /**

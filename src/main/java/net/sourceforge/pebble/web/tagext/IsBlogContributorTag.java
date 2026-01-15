@@ -36,9 +36,9 @@ import net.sourceforge.pebble.domain.Blog;
 import net.sourceforge.pebble.domain.AbstractBlog;
 import net.sourceforge.pebble.util.SecurityUtils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.tagext.TagSupport;
 
 /**
  * A custom tag that includes its body content if the current user belongs to

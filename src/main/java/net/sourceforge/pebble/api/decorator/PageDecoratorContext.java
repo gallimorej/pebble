@@ -32,7 +32,7 @@
 
 package net.sourceforge.pebble.api.decorator;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Context for page decorators

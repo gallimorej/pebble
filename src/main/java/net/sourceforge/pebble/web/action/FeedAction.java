@@ -41,10 +41,10 @@ import net.sourceforge.pebble.web.view.impl.AbstractRomeFeedView;
 import net.sourceforge.pebble.web.view.impl.FeedView;
 import net.sourceforge.pebble.web.view.impl.RdfView;
 
-import javax.inject.Inject;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.*;
 
 /**
@@ -108,11 +108,10 @@ public class FeedAction extends Action {
 
     getModel().put(Constants.BLOG_ENTRIES, blogEntriesForFeed);
 
-    // set the locale of this feed request to be English
-    javax.servlet.jsp.jstl.core.Config.set(
-        request,
-        javax.servlet.jsp.jstl.core.Config.FMT_LOCALE,
-        Locale.ENGLISH);
+    // Phase 3B-R: Set locale for feed request to English using session attribute
+    // Replaced javax.servlet.jsp.jstl.core.Config with direct session attribute
+    // JSTL still reads from this standard attribute even in Jakarta namespace
+    request.getSession().setAttribute("javax.servlet.jsp.jstl.fmt.locale", Locale.ENGLISH);
 
     if (flavor != null && flavor.equalsIgnoreCase("atom")) {
       return new FeedView(AbstractRomeFeedView.FeedType.ATOM);

@@ -34,7 +34,7 @@ package net.sourceforge.pebble.confirmation;
 import net.sourceforge.pebble.domain.Comment;
 import net.sourceforge.pebble.domain.Blog;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * No-op implementation that doesn't require confirmation to be performed.

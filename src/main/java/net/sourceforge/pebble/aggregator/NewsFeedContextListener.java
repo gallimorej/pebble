@@ -34,8 +34,8 @@ package net.sourceforge.pebble.aggregator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.ServletContextEvent;
 import java.util.Timer;
 import java.util.TimerTask;
 

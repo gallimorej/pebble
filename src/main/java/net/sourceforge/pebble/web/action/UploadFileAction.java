@@ -41,19 +41,18 @@ import net.sourceforge.pebble.web.view.RedirectView;
 import net.sourceforge.pebble.web.view.View;
 import net.sourceforge.pebble.web.view.impl.FileTooLargeView;
 import net.sourceforge.pebble.web.view.impl.NotEnoughSpaceView;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadBase;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.util.Iterator;
-import java.util.List;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * Superclass for actions that allow the user to upload a file.
@@ -66,6 +65,7 @@ public abstract class UploadFileAction extends AbstractFileAction {
 
   /**
    * Peforms the processing associated with this action.
+   * Phase 3B-R: Replaced commons-fileupload with Spring Native Multipart support
    *
    * @param request  the HttpServletRequest instance
    * @param response the HttpServletResponse instance
@@ -81,66 +81,57 @@ public abstract class UploadFileAction extends AbstractFileAction {
     FileManager fileManager = new FileManager(blog, type);
 
     try {
-      boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+      // Spring Native Multipart: Check if request is multipart
+      if (request instanceof MultipartHttpServletRequest) {
+        MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
 
-      if (isMultipart) {
-        DiskFileItemFactory factory = new DiskFileItemFactory();
-        long sizeInBytes = PebbleContext.getInstance().getConfiguration().getFileUploadSize() * 1024; // convert to bytes
-        factory.setSizeThreshold((int)sizeInBytes/4);
-        factory.setRepository(new File(System.getProperty("java.io.tmpdir")));
-
-        ServletFileUpload upload = new ServletFileUpload(factory);
-        upload.setSizeMax(sizeInBytes);
-
-        List items;
-        try {
-          items = upload.parseRequest(request);
-        } catch (FileUploadBase.SizeLimitExceededException e) {
-          return new FileTooLargeView();
+        // Get path parameter from regular request parameters
+        path = multipartRequest.getParameter("path");
+        if (path == null) {
+          path = "";
         }
 
-        // find the form fields first
-        Iterator it = items.iterator();
-        while (it.hasNext()) {
-          FileItem item = (FileItem)it.next();
-          if (item.isFormField() && item.getFieldName().startsWith("filename")) {
-            int index = Integer.parseInt(item.getFieldName().substring(item.getFieldName().length()-1));
-            filenames[index] = item.getString();
-            log.debug("index is " + index + ", filename is " + filenames[index]);
-          } else if (item.isFormField() && item.getFieldName().equals("path")) {
-            path = item.getString();
+        // Get custom filename parameters (filename0, filename1, etc.)
+        for (int i = 0; i < 10; i++) {
+          String filename = multipartRequest.getParameter("filename" + i);
+          if (filename != null && !filename.isEmpty()) {
+            filenames[i] = filename;
+            log.debug("index is " + i + ", filename is " + filenames[i]);
           }
         }
 
-        // now the actual files
-        it = items.iterator();
-        while (it.hasNext()) {
-          FileItem item = (FileItem)it.next();
+        // Process uploaded files
+        Map<String, MultipartFile> fileMap = multipartRequest.getFileMap();
+        for (Map.Entry<String, MultipartFile> entry : fileMap.entrySet()) {
+          String fieldName = entry.getKey();
+          MultipartFile multipartFile = entry.getValue();
 
-          if (!item.isFormField() && item.getSize() > 0 && item.getFieldName().startsWith("file")) {
-            int index = Integer.parseInt(item.getFieldName().substring(item.getFieldName().length()-1));
+          // Process files with field names starting with "file" (file0, file1, etc.)
+          if (fieldName.startsWith("file") && !multipartFile.isEmpty()) {
+            int index = Integer.parseInt(fieldName.substring(fieldName.length() - 1));
 
-            // if the filename hasn't been specified, use that from the file
-            // being uploaded
+            // if the filename hasn't been specified, use that from the file being uploaded
             if (filenames[index] == null || filenames[index].length() == 0) {
-              filenames[index] = item.getName();
+              filenames[index] = multipartFile.getOriginalFilename();
             }
 
             File destinationDirectory = fileManager.getFile(path);
             File file = new File(destinationDirectory, filenames[index]);
+
+            // Security: Verify file is underneath root directory (prevent path traversal)
             if (!fileManager.isUnderneathRootDirectory(file)) {
               response.setStatus(HttpServletResponse.SC_FORBIDDEN);
               return null;
             }
 
-            long itemSize = item.getSize()/1024;
+            long itemSize = multipartFile.getSize() / 1024;
             if (FileManager.hasEnoughSpace(blog, itemSize)) {
-              log.debug("Writing file " + filenames[index] + ", size is " + item.getSize());
-              writeFile(fileManager, path, filenames[index], item);
+              log.debug("Writing file " + filenames[index] + ", size is " + multipartFile.getSize());
+              writeFile(fileManager, path, filenames[index], multipartFile);
 
               // if it's a theme file, also create a copy in blog.dir/theme
               if (type.equals(FileMetaData.THEME_FILE)) {
-                writeFile(new FileManager(blog, FileMetaData.BLOG_DATA), "/theme" + path, filenames[index], item);
+                writeFile(new FileManager(blog, FileMetaData.BLOG_DATA), "/theme" + path, filenames[index], multipartFile);
               }
             } else {
               return new NotEnoughSpaceView();
@@ -150,6 +141,9 @@ public abstract class UploadFileAction extends AbstractFileAction {
       }
 
       blog.info("Files uploaded.");
+    } catch (MaxUploadSizeExceededException e) {
+      // Spring throws this when file size exceeds configured maximum
+      return new FileTooLargeView();
     } catch (Exception e) {
       throw new ServletException(e);
     }
@@ -160,20 +154,21 @@ public abstract class UploadFileAction extends AbstractFileAction {
   }
 
   /**
-   * Helper method to write a file.
+   * Helper method to write a file using Spring MultipartFile.
+   * Phase 3B-R: Updated to use Spring Native Multipart instead of commons-fileupload
    *
-   * @param fileManager   a FileManager instance
-   * @param path          the path where to save the file
-   * @param filename      the filename
-   * @param item          the uploaded item
-   * @throws Exception    if something goes wrong writing the file
+   * @param fileManager    a FileManager instance
+   * @param path           the path where to save the file
+   * @param filename       the filename
+   * @param multipartFile  the uploaded Spring MultipartFile
+   * @throws Exception     if something goes wrong writing the file
    */
-  private void writeFile(FileManager fileManager, String path, String filename, FileItem item) throws Exception {
+  private void writeFile(FileManager fileManager, String path, String filename, MultipartFile multipartFile) throws Exception {
     File destinationDirectory = fileManager.getFile(path);
     destinationDirectory.mkdirs();
 
     File file = new File(destinationDirectory, filename);
-    item.write(file);
+    multipartFile.transferTo(file);
   }
 
   /**

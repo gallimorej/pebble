@@ -35,7 +35,7 @@ package net.sourceforge.pebble.openid;
 import net.sourceforge.pebble.api.decorator.PageDecoratorContext;
 import net.sourceforge.pebble.api.openid.OpenIdCommentAuthorProvider;
 
-import javax.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.JspWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;

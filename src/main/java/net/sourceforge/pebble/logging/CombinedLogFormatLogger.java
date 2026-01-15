@@ -34,7 +34,7 @@ package net.sourceforge.pebble.logging;
 import net.sourceforge.pebble.domain.Blog;
 import net.sourceforge.pebble.Constants;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

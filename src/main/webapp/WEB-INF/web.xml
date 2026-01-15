@@ -188,6 +188,16 @@
       <param-name>httpControllerBeanName</param-name>
       <param-value>secureHttpController</param-value>
     </init-param>
+
+    <!-- Phase 3B-R: Servlet 3.0+ multipart configuration (replaces commons-fileupload) -->
+    <multipart-config>
+      <!-- Max file size: 5MB (5242880 bytes) - matches previous fileUploadSize config -->
+      <max-file-size>5242880</max-file-size>
+      <!-- Max request size: 20MB (allows multiple files in one request) -->
+      <max-request-size>20971520</max-request-size>
+      <!-- Size threshold for writing to disk (1MB) -->
+      <file-size-threshold>1048576</file-size-threshold>
+    </multipart-config>
   </servlet>
 
   <servlet>

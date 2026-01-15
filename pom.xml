@@ -20,8 +20,9 @@
         <maven.compiler.release>17</maven.compiler.release>
 
         <!-- Phase 2: Spring 5.3.x -->
-        <spring.version>5.3.39</spring.version>
-        <spring-security.version>5.8.14</spring-security.version>
+        <!-- Phase 3B-R: Spring 6.x (requires Java 17 + Jakarta EE 9) -->
+        <spring.version>6.0.23</spring.version>
+        <spring-security.version>6.2.1</spring-security.version>
 
         <!-- Phase 2: Lucene 9.x -->
         <lucene.version>9.9.2</lucene.version>
@@ -80,17 +81,39 @@
             <version>3.14.0</version>
         </dependency>
         <!-- Phase 2: Tomcat 9 APIs (Java 11 and Spring 5 compatible) -->
+        <!-- Phase 3B-R: Jakarta Servlet 5.0 (required by Spring 6) -->
         <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-servlet-api</artifactId>
-            <version>9.0.85</version>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-jsp-api</artifactId>
-            <version>9.0.85</version>
+            <groupId>jakarta.servlet.jsp</groupId>
+            <artifactId>jakarta.servlet.jsp-api</artifactId>
+            <version>3.0.0</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <!-- Phase 3B-R: Jakarta Inject and Annotation APIs -->
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>2.1.1</version>
         </dependency>
         <dependency>
             <groupId>com.maxmind.geoip</groupId>
@@ -133,11 +156,10 @@
             <artifactId>spring-security-config</artifactId>
             <version>${spring-security.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-openid</artifactId>
-            <version>${spring-security.version}</version>
-        </dependency>
+        <!-- Phase 3B-R: Removed spring-security-openid (removed from Spring Security 6.x) -->
+        <!-- OpenID 2.0 support has been deprecated and removed -->
+        <!-- OAuth 2.0/OIDC support can be added in future using spring-security-oauth2-client -->
+        <!-- For now, users must authenticate using username/password -->
 
         <!-- Phase 2: Spring Framework 5.3.x -->
         <dependency>
@@ -194,11 +216,9 @@
             <artifactId>jakarta.activation-api</artifactId>
             <version>1.2.2</version>
         </dependency>
-        <dependency>
-            <groupId>com.rometools</groupId>
-            <artifactId>rome-propono</artifactId>
-            <version>1.5.1</version>
-        </dependency>
+        <!-- Phase 3B-R: Removed rome-propono (Atom Publishing Protocol) -->
+        <!-- AtomPub support has been removed as it's rarely used and has no Jakarta-compatible version -->
+        <!-- Atom *feeds* still work via the rome library -->
         <dependency>
             <groupId>com.rometools</groupId>
             <artifactId>rome</artifactId>

@@ -31,7 +31,7 @@
  */
 package net.sourceforge.pebble.web.security;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * A condition for when a security token should be validated

@@ -33,9 +33,9 @@ package net.sourceforge.pebble.web.tagext;
 
 import net.sourceforge.pebble.web.security.SecurityTokenValidatorImpl;
 
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.tagext.TagSupport;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.tagext.TagSupport;
 import java.io.IOException;
 
 /**

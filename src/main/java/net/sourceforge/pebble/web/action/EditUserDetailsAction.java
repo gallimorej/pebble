@@ -38,9 +38,9 @@ import net.sourceforge.pebble.web.view.impl.FourZeroThreeView;
 import net.sourceforge.pebble.Constants;
 import net.sourceforge.pebble.security.PebbleUserDetails;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Displays information about a single user, ready for it to be edited.

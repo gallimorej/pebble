@@ -35,7 +35,7 @@ import net.sourceforge.pebble.domain.FileMetaData;
 import net.sourceforge.pebble.web.view.ForwardView;
 import net.sourceforge.pebble.web.view.View;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /**
  * Tests for the FileAction class.

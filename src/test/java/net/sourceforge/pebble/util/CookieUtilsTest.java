@@ -34,7 +34,7 @@ package net.sourceforge.pebble.util;
 
 import junit.framework.TestCase;
 
-import javax.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie;
 
 /**
  * Tests for the utilities in the CookieUtils class.

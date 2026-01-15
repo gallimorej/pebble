@@ -36,9 +36,9 @@ import net.sourceforge.pebble.web.view.impl.CommunityView;
 import net.sourceforge.pebble.domain.Blog;
 import net.sourceforge.pebble.Constants;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
 
 /**
  * Allows the user to see blog entries from the community.

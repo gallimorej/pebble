@@ -32,7 +32,7 @@
 
 package net.sourceforge.pebble.api.decorator;
 
-import javax.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.JspWriter;
 import java.io.IOException;
 import java.io.Writer;
 

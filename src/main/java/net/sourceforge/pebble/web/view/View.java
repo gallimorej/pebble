@@ -33,10 +33,10 @@ package net.sourceforge.pebble.web.view;
 
 import net.sourceforge.pebble.web.model.Model;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Represents a view component and prepares the model for display.
