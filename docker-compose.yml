@@ -11,8 +11,8 @@ services:
       - pebble-data:/app/data
       - pebble-logs:/app/logs
     environment:
-      # Java runtime configuration
-      - JAVA_OPTS=-Xmx1024m -Xms512m -XX:MaxPermSize=256m -Djava.security.egd=file:/dev/./urandom
+      # Java runtime configuration (Java 11+ compatible)
+      - JAVA_OPTS=-Xmx1024m -Xms512m -XX:MaxMetaspaceSize=256m -Djava.security.egd=file:/dev/./urandom
       - CATALINA_OPTS=-Dfile.encoding=UTF-8 -Duser.timezone=UTC
       # Pebble configuration
       - PEBBLE_DATA_DIR=/app/data

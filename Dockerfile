@@ -1,5 +1,5 @@
 # Dockerfile for Pebble Application
-# Phase 2: Java 11 LTS + Tomcat 9.0.x
+# Phase 3A: Java 17 LTS + Tomcat 9.0.x
 # Spring 5.3.x + Lucene 9.x
 
 FROM ubuntu:20.04
@@ -17,12 +17,12 @@ RUN apt-get update && apt-get install -y \
     fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
-# Install OpenJDK 11 (Java 11 LTS)
-RUN apt-get update && apt-get install -y openjdk-11-jdk && rm -rf /var/lib/apt/lists/*
+# Install OpenJDK 17 (Java 17 LTS)
+RUN apt-get update && apt-get install -y openjdk-17-jdk && rm -rf /var/lib/apt/lists/*
 
 # Set JAVA_HOME (auto-detect Java installation)
 RUN echo "export JAVA_HOME=\$(dirname \$(dirname \$(readlink -f \$(which java))))" >> /etc/profile
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-arm64
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
 ENV PATH=$PATH:$JAVA_HOME/bin
 
 # Create application user for security
@@ -46,8 +46,8 @@ ENV CATALINA_TMPDIR=/tmp
 ENV JRE_HOME=$JAVA_HOME
 ENV CLASSPATH=$CATALINA_HOME/bin/bootstrap.jar:$CATALINA_HOME/bin/tomcat-juli.jar
 
-# Phase 2: Java 11 memory settings (MaxPermSize removed in Java 8+)
-ENV JAVA_OPTS="-Xmx1024m -Xms512m -XX:MaxMetaspaceSize=256m -Djava.security.egd=file:/dev/./urandom"
+# Phase 3A: Java 17 memory settings with G1GC optimization
+ENV JAVA_OPTS="-Xmx1024m -Xms512m -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom"
 ENV CATALINA_OPTS="-Dfile.encoding=UTF-8 -Duser.timezone=UTC"
 
 # Pebble-specific configuration
