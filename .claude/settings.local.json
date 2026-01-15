@@ -23,7 +23,10 @@
       "Bash(xargs ls:*)",
       "Bash(grep:*)",
       "Bash(wc:*)",
-      "Bash(docker stop:*)"
+      "Bash(docker stop:*)",
+      "Bash(git tag:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
