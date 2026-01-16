@@ -26,7 +26,12 @@
       "Bash(docker stop:*)",
       "Bash(git tag:*)",
       "Bash(ls:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(mvn:*)",
+      "Bash(docker stats:*)",
+      "Bash(xargs -I {} bash -c 'count=$\\(grep -c \"\"\"\"instanceof\"\"\"\" {}\\); echo \"\"\"\"$count {}\"\"\"\"')",
+      "Bash(docker tag:*)",
+      "Bash(git push:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

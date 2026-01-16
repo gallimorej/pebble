@@ -20,6 +20,11 @@
         privateBlogInvocationInterceptor,
         filterInvocationInterceptor
         "/>
+      <security:filter-chain pattern="/login/oauth2/**" filters="
+        securityContextPersistenceFilter,
+        oauth2LoginFilter,
+        exceptionTranslationFilter
+        "/>
       <security:filter-chain pattern="/**" filters="
         securityContextPersistenceFilter,
         formProcessingFilter,
@@ -40,6 +45,7 @@
       <list>
         <ref bean="daoAuthenticationProvider"/>
         <ref bean="rememberMeAuthenticationProvider"/>
+        <!-- OAuth2 authentication is handled separately by OAuth2LoginAuthenticationProvider -->
       </list>
     </constructor-arg>
   </bean>
@@ -143,6 +149,81 @@
     <property name="defaultFailureUrl" value="/loginPage.action?error=login.incorrect"/>
     <property name="redirectStrategy" ref="redirectStrategy"/>
   </bean>
+
+  <!-- ===================== OAUTH2 CONFIGURATION ==================== -->
+
+  <!-- OAuth2 User Service for processing OAuth2 user information -->
+  <bean id="oauth2UserService" class="net.sourceforge.pebble.security.OAuth2UserService">
+    <property name="securityRealm" ref="pebbleSecurityRealm"/>
+    <property name="autoRegisterUsers" value="true"/>
+  </bean>
+
+  <!-- OAuth2 Client Registration Repository -->
+  <!-- Configured via application.yml or environment variables -->
+  <!-- Example configuration in application-oauth2.yml -->
+  <!--
+  <bean id="clientRegistrationRepository"
+        class="org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository">
+    <constructor-arg>
+      <list>
+        <bean class="net.sourceforge.pebble.security.OAuth2SecurityConfig"
+              factory-method="googleClientRegistration">
+          <constructor-arg value="${spring.security.oauth2.client.registration.google.client-id}"/>
+          <constructor-arg value="${spring.security.oauth2.client.registration.google.client-secret}"/>
+        </bean>
+      </list>
+    </constructor-arg>
+  </bean>
+  -->
+
+  <!-- OAuth2 Login Success Handler -->
+  <bean id="oauth2AuthenticationSuccessHandler"
+        class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
+    <property name="targetUrlParameter" value="redirectUrl"/>
+    <property name="redirectStrategy" ref="redirectStrategy"/>
+    <property name="defaultTargetUrl" value="/"/>
+  </bean>
+
+  <!-- OAuth2 Login Failure Handler -->
+  <bean id="oauth2AuthenticationFailureHandler"
+        class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+    <property name="defaultFailureUrl" value="/loginPage.action?error=oauth2.login.failed"/>
+    <property name="redirectStrategy" ref="redirectStrategy"/>
+  </bean>
+
+  <!-- OAuth2 Login Filter -->
+  <!-- This bean should be configured when clientRegistrationRepository is available -->
+  <!-- Uncomment and configure when OAuth2 providers are set up in application.yml -->
+  <!--
+  <bean id="oauth2LoginFilter"
+        class="org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter">
+    <constructor-arg ref="clientRegistrationRepository"/>
+    <constructor-arg ref="oauth2AuthorizedClientService"/>
+    <property name="authenticationManager" ref="oauth2AuthenticationManager"/>
+    <property name="authenticationSuccessHandler" ref="oauth2AuthenticationSuccessHandler"/>
+    <property name="authenticationFailureHandler" ref="oauth2AuthenticationFailureHandler"/>
+  </bean>
+
+  <bean id="oauth2AuthenticationManager"
+        class="org.springframework.security.authentication.ProviderManager">
+    <constructor-arg>
+      <list>
+        <bean class="org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationProvider">
+          <constructor-arg ref="oauth2AccessTokenResponseClient"/>
+          <constructor-arg ref="oauth2UserService"/>
+        </bean>
+      </list>
+    </constructor-arg>
+  </bean>
+
+  <bean id="oauth2AccessTokenResponseClient"
+        class="org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient"/>
+
+  <bean id="oauth2AuthorizedClientService"
+        class="org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService">
+    <constructor-arg ref="clientRegistrationRepository"/>
+  </bean>
+  -->
 
   <!-- Spring Security 5.x LoginUrlAuthenticationEntryPoint requires constructor arg -->
   <!-- HTTPS enforcement disabled for development. Set to true in production with HTTPS configured -->

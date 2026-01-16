@@ -90,6 +90,24 @@ public interface SecurityRealm {
   public void createUser(PebbleUserDetails pud) throws SecurityRealmException;
 
   /**
+   * Creates a new user with specified details. Convenience method for OAuth2 integration.
+   *
+   * @param username    the username
+   * @param password    the password (can be empty for OAuth2 users)
+   * @param name        the full name
+   * @param email       the email address
+   * @param website     the website URL
+   * @param profile     the profile description
+   * @param roles       array of role names
+   */
+  default void createUser(String username, String password, String name, String email,
+                         String website, String profile, String[] roles) throws SecurityRealmException {
+    PebbleUserDetails pud = new PebbleUserDetails(username, password, name, email,
+                                                    website, profile, roles, new java.util.HashMap<>(), true);
+    createUser(pud);
+  }
+
+  /**
    * Updates user details, except for the password
    *
    * @param pud   a PebbleUserDetails instance
